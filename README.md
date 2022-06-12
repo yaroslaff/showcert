@@ -1,12 +1,13 @@
 # showcert
-Simple CLI tool to check local (.pem) and remote SSL certificates with clean output (only important info: dates, hosts, issuer).
+Simple CLI tool to check local (.pem) and remote SSL certificates with clean output.
 
 ~~~
-$ bin/showcert cloudflare.com
-Names: cloudflare.com *.staging.cloudflare.com *.cloudflare.com *.amp.cloudflare.com *.dns.cloudflare.com
-notBefore: 2022-05-04 00:00:00
-notAfter: 2023-05-04 23:59:59
-Issuer: C=US O=Cloudflare, Inc. CN=Cloudflare Inc ECC CA-3
+$ showcert github.com
+Names: github.com www.github.com
+notBefore: 2022-03-15 00:00:00
+notAfter: 2023-03-15 23:59:59
+Issuer: C=US O=DigiCert Inc CN=DigiCert TLS Hybrid ECC SHA384 2020 CA1
+
 ~~~
 
 ## Installation
