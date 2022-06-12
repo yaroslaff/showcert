@@ -14,8 +14,8 @@ from cryptography.hazmat.backends import default_backend
 
 def get_args():
     parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info')
-    parser.add_argument('CERT', help='/path/cert.pem or https://google.com/')
-    parser.add_argument('-a', '--address', help='host or host:port to connect (if not specified - guessed from CERT)')
+    parser.add_argument('CERT', help='/path/cert.pem or google.com or google.com')
+    parser.add_argument('-n', '--address', help='host or host:port to connect (if not specified - guessed from CERT)')
     parser.add_argument('-i', '--insecure', default=False, action='store_true', help='Do not verify remote certificate')
     return parser.parse_args()
 
@@ -70,11 +70,7 @@ def get_remote_cert(CERT, addr, insecure):
             host = addr
             port = 443
 
-    try:
-        certificate = get_certificate(host, sni_host=certhost, port=port, insecure=insecure)
-    except ssl.SSLCertVerificationError as e:
-        print("Certificate verification error (use -i):", e)
-        return
+    certificate = get_certificate(host, sni_host=certhost, port=port, insecure=insecure)
 
     cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificate)
     return cert
@@ -102,10 +98,14 @@ def show_cert(CERT, addr, insecure):
         except KeyError:
             return [] # No subjectAltName
 
-    if is_local(CERT):
-        cert = get_local_cert(CERT)
-    else:
-        cert = get_remote_cert(CERT, addr, insecure)
+    try:
+        if is_local(CERT):
+            cert = get_local_cert(CERT)
+        else:
+            cert = get_remote_cert(CERT, addr, insecure)
+    except ssl.SSLCertVerificationError as e:
+        print("Certificate verification error (use -i):", e)
+        return
 
     subject = tlist2value(cert.get_subject().get_components(), 'CN')
     names = get_SAN(cert)
