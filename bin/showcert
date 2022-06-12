@@ -11,16 +11,28 @@ from datetime import datetime
 from pprint import pprint
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
+import sys
 
 def get_args():
-    parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info')
-    parser.add_argument('CERT', help='/path/cert.pem or google.com or google.com')
-    parser.add_argument('-n', '--address', help='host or host:port to connect (if not specified - guessed from CERT)')
+    epilog = """Examples:  
+  # just check remote certificate
+  {me} example.com
+
+  # check cert for example.com on new.example.com, do not verify
+  {me} new.example.com -n example.com -i
+
+  # dump info from local certificate file
+  {me} /etc/letsencrypt/live/example.com/fullchain.pem
+    """.format(me=sys.argv[0])
+    parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info',
+    formatter_class=argparse.RawTextHelpFormatter, epilog=epilog)
+    parser.add_argument('CERT', help='/path/cert.pem or google.com or google.com:443')
+    parser.add_argument('-n', '--name', help='name for SNI (if not same as CERT host)')
     parser.add_argument('-i', '--insecure', default=False, action='store_true', help='Do not verify remote certificate')
     return parser.parse_args()
 
-def get_certificate(host, sni_host=None, port=443, timeout=10, insecure=False):
-    sni_host = sni_host or host
+def get_certificate(host, name=None, port=443, timeout=10, insecure=False):
+    name = name or host
     if insecure:        
         context = ssl._create_unverified_context()
         context.verify_mode = ssl.CERT_NONE
@@ -28,7 +40,7 @@ def get_certificate(host, sni_host=None, port=443, timeout=10, insecure=False):
         context = ssl.create_default_context()
 
     conn = socket.create_connection((host, port))
-    sock = context.wrap_socket(conn, server_hostname=sni_host)
+    sock = context.wrap_socket(conn, server_hostname=name)
     sock.settimeout(timeout)
     try:
         der_cert = sock.getpeercert(True)
@@ -44,13 +56,18 @@ def is_local(cert):
         return True
     return False
 
-def dump_local_cert(CERT):
-    cmd = ['openssl', 'x509', '-inform', 'pem' , '-noout', '-text', '-in', CERT]
-    subprocess.run(cmd)
 
-
-def get_remote_cert(CERT, addr, insecure):
+def get_remote_cert(CERT, name=None, insecure=False):
     # parse CERT address
+
+    if ':' in CERT:
+        (host, port) = CERT.split(':')
+    else:
+        host = CERT
+        port = 443
+    
+    name = name or host
+
     m = re.search('(https?:\/\/)?(?P<host>[^/:]+):?(?P<port>\d+)?', CERT)
     if m is None:
         print(f"Can not parse {CERT}")
@@ -62,15 +79,7 @@ def get_remote_cert(CERT, addr, insecure):
     host = certhost
     port = certport
 
-    # guess host:port
-    if addr:
-        if ':' in addr:
-            (host, port) = addr.split(':')
-        else:
-            host = addr
-            port = 443
-
-    certificate = get_certificate(host, sni_host=certhost, port=port, insecure=insecure)
+    certificate = get_certificate(host, name=name, port=port, insecure=insecure)
 
     cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificate)
     return cert
@@ -113,74 +122,22 @@ def show_cert(CERT, addr, insecure):
         names.remove(subject)
     
     names.insert(0, subject)
-    print("Names:", ' '.join(names))
 
     nbefore = datetime.strptime(cert.get_notBefore().decode(), '%Y%m%d%H%M%SZ')
     nafter = datetime.strptime(cert.get_notAfter().decode(), '%Y%m%d%H%M%SZ')
+    issuer = tlist2str(cert.get_issuer().get_components())
+
+    print("Names:", ' '.join(names))
     print("notBefore:", nbefore)
     print("notAfter:", nafter)
-
-
-
-    issuer = tlist2str(cert.get_issuer().get_components())
     print("Issuer:", issuer)
-
-
-def OLD_dump_remote_cert(CERT, addr, certopt):
-
-    # parse CERT address
-    m = re.search('(https?:\/\/)?(?P<host>[^/:]+):?(?P<port>\d+)?', CERT)
-    if m is None:
-        print(f"Can not parse {CERT}")
-        return
-    print(m)
-    print(m.groups())
-    certhost = m.group('host')
-    certport = m.group('port') or '443'
-
-    host = certhost
-    port = certport
-
-    # guess host:port
-    if addr:
-        if ':' in addr:
-            (host, port) = addr.split(':')
-        else:
-            host = addr
-            port = 443
-
-
-    print(host, port)
-
-    connect_cmd = ['openssl', 's_client', '-showcerts', '-servername' , certhost, '-connect', f'{host}:{port}']
-    print(connect_cmd)
-    dump_cmd = ['openssl', 'x509', '-inform', 'pem', '-noout', '-text']
-    if certopt:
-        dump_cmd.extend(['-certopt', certopt])
-
-    connect = subprocess.Popen(
-        connect_cmd, 
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE)
-
-    dump = subprocess.Popen(dump_cmd, stdin=connect.stdout)
-    dump.wait()
-
-    """
-    ps = subprocess.Popen(('ps', '-A'), stdout=subprocess.PIPE)
-    output = subprocess.check_output(('grep', 'process_name'), stdin=ps.stdout)
-    ps.wait()
-
-    openssl s_client -showcerts -servername $REMOTE -connect $REMOTE:443
-    """
-
 
 
 
 def main():
     args = get_args()
 
-    show_cert(args.CERT, args.address, args.insecure)
+    show_cert(args.CERT, args.name, args.insecure)
 
 
 if __name__ == '__main__':
