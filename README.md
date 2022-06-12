@@ -1,5 +1,5 @@
 # showcert
-Simple CLI tool to check local (.pem) and remote SSL certificates with clean output.
+Simple CLI tool with clean output to show local (.pem) and remote SSL certificates.
 
 ~~~
 $ showcert github.com
