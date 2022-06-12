@@ -1,5 +1,13 @@
 # showcert
-Simple tool to check local (.pem) and remote SSL certificates. Shows
+Simple CLI tool to check local (.pem) and remote SSL certificates with clean output (only important info: dates, hosts, issuer).
+
+~~~
+$ bin/showcert cloudflare.com
+Names: cloudflare.com *.staging.cloudflare.com *.cloudflare.com *.amp.cloudflare.com *.dns.cloudflare.com
+notBefore: 2022-05-04 00:00:00
+notAfter: 2023-05-04 23:59:59
+Issuer: C=US O=Cloudflare, Inc. CN=Cloudflare Inc ECC CA-3
+~~~
 
 ## Installation
 `pip3 install showcert`
@@ -28,13 +36,4 @@ Examples:
 
   # dump info from local certificate file
   bin/showcert /etc/letsencrypt/live/example.com/fullchain.pem
-~~~
-
-## Example output
-~~~
-$ bin/showcert cloudflare.com
-Names: cloudflare.com *.staging.cloudflare.com *.cloudflare.com *.amp.cloudflare.com *.dns.cloudflare.com
-notBefore: 2022-05-04 00:00:00
-notAfter: 2023-05-04 23:59:59
-Issuer: C=US O=Cloudflare, Inc. CN=Cloudflare Inc ECC CA-3
 ~~~
