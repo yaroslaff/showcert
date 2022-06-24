@@ -125,11 +125,13 @@ def show_cert(CERT, addr, insecure):
 
     nbefore = datetime.strptime(cert.get_notBefore().decode(), '%Y%m%d%H%M%SZ')
     nafter = datetime.strptime(cert.get_notAfter().decode(), '%Y%m%d%H%M%SZ')
+    daysold = (datetime.now() - nbefore).days
+    daysleft = (nafter - datetime.now()).days
     issuer = tlist2str(cert.get_issuer().get_components())
 
     print("Names:", ' '.join(names))
-    print("notBefore:", nbefore)
-    print("notAfter:", nafter)
+    print("notBefore: {nbefore} ({days} days old)".format(nbefore=nbefore, days=daysold))
+    print("notAfter: {nafter} ({days} days left)".format(nafter=nafter, days = daysleft))
     print("Issuer:", issuer)
 
 

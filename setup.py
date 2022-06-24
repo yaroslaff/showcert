@@ -11,7 +11,7 @@ def read(fname):
 
 setup(
     name='showcert',
-    version='0.0.1',
+    version='0.0.2',
     packages=[],
     scripts=['bin/showcert'],
 
