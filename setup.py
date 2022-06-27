@@ -11,11 +11,11 @@ def read(fname):
 
 setup(
     name='showcert',
-    version='0.0.2',
+    version='0.0.3',
     packages=[],
     scripts=['bin/showcert'],
 
-    install_requires=['patool','filetype','filelock','setuptools', 'requests'],
+    install_requires=['pyOpenSSL'],
 
     url='https://github.com/yaroslaff/showcert',
     license='MIT',
