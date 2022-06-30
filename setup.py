@@ -4,14 +4,18 @@ from setuptools import setup
 import os
 import sys
 
+from importlib.machinery import SourceFileLoader
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+def get_version(path):
+    foo = SourceFileLoader(os.path.basename(path),"bin/showcert").load_module()
+    return foo.version
 
 setup(
     name='showcert',
-    version='0.0.3',
+    version=get_version('bin/showcert'),
     packages=[],
     scripts=['bin/showcert'],
 
