@@ -9,7 +9,7 @@ Issuer: C=US O=DigiCert Inc CN=DigiCert TLS Hybrid ECC SHA384 2020 CA1
 ~~~
 
 Also:
-- `bin/showcert /etc/ssl/certs/ssl-cert-snakeoil.pem` (show certificate from file)
+- `showcert /etc/ssl/certs/ssl-cert-snakeoil.pem` (show certificate from local file)
 - `showcert imap.gmail.com:995` (show certificate for gmail IMAP)
 - `showcert -i -n google.com localhost` (show certificate for google.com on my local server, even if it's not valid)
 
