@@ -14,6 +14,9 @@ Also:
 - `showcert -i -n google.com localhost` (show certificate for google.com on my local server, even if it's not valid)
 
 
+## Limitation
+showcert shows only first certificate from PEM file (if there are many) and shows only certificate presented over SSL connection, but can not, for example, verify SMTP STARTTLS certificate (you can verify it locally, but not over network).
+
 ## Installation
 `pip3 install showcert`
 
