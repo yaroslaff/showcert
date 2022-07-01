@@ -2,13 +2,17 @@
 Simple CLI tool with clean output to show local (.pem) and remote SSL certificates. (For those, who can do this with openssl, but often have to search for right syntax)
 
 ~~~
-$ showcert github.com
 Names: github.com www.github.com
-notBefore: 2022-03-15 00:00:00
-notAfter: 2023-03-15 23:59:59
+notBefore: 2022-03-15 00:00:00 (108 days old)
+notAfter: 2023-03-15 23:59:59 (257 days left)
 Issuer: C=US O=DigiCert Inc CN=DigiCert TLS Hybrid ECC SHA384 2020 CA1
-
 ~~~
+
+Also:
+- `bin/showcert /etc/ssl/certs/ssl-cert-snakeoil.pem` (show certificate from file)
+- `showcert imap.gmail.com:995` (show certificate for gmail IMAP)
+- `showcert -i -n google.com localhost` (show certificate for google.com on my local server, even if it's not valid)
+
 
 ## Installation
 `pip3 install showcert`
