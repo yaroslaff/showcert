@@ -12,7 +12,7 @@ from pprint import pprint
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
-version = '0.0.8'
+version = '0.0.9'
 
 def get_args():
     epilog = """Examples:  
@@ -25,9 +25,8 @@ def get_args():
   # dump info from local certificate file
   {me} /etc/letsencrypt/live/example.com/fullchain.pem
 
-  # verify cert quietly and print to stderr only if it will expire in one week
-  {me} -q -w 7 github.com
-
+  # look for expiring letsencrypt certificates
+  for cert in /etc/letsencrypt/live/*/cert.pem; do {me} -q -w 7 $cert; done
     """.format(me=sys.argv[0])
     parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info v{version}'.format(version=version),
     formatter_class=argparse.RawTextHelpFormatter, epilog=epilog)
@@ -143,7 +142,7 @@ def show_cert(CERT, name=None, insecure=False, quiet=False, warn=False):
         print("Issuer:", issuer)
 
 
-    if warn and daysleft<warn:
+    if warn is not None and daysleft<warn:
         print("{CERT} expires in {left} days".format(CERT=CERT, left=daysleft),
             file=sys.stderr)
         return 1

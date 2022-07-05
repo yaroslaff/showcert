@@ -13,7 +13,7 @@ Also:
 - `showcert /etc/ssl/certs/ssl-cert-snakeoil.pem` (show certificate from local file)
 - `showcert imap.gmail.com:995` (show certificate for gmail IMAP)
 - `showcert -i -n google.com localhost` (show certificate for google.com on my local server, even if it's not valid)
-- `showcert -qw3 google.com` (quietly check if google.com cert if fresh, and write to stderr if it will expire in 3 days)
+- `for cert in /etc/letsencrypt/live/*/cert.pem; do {me} -q -w $cert; done` (Look for expiring LetsEncrypt certificates)
 
 
 ## Limitations
