@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import argparse
-import subprocess
 import re
 import ssl
 import socket
@@ -11,9 +11,8 @@ from datetime import datetime
 from pprint import pprint
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
-import sys
 
-version = '0.0.7'
+version = '0.0.8'
 
 def get_args():
     epilog = """Examples:  
@@ -25,12 +24,18 @@ def get_args():
 
   # dump info from local certificate file
   {me} /etc/letsencrypt/live/example.com/fullchain.pem
+
+  # verify cert quietly and print to stderr only if it will expire in one week
+  {me} -q -w 7 github.com
+
     """.format(me=sys.argv[0])
     parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info v{version}'.format(version=version),
     formatter_class=argparse.RawTextHelpFormatter, epilog=epilog)
     parser.add_argument('CERT', help='/path/cert.pem or google.com or google.com:443')
     parser.add_argument('-n', '--name', help='name for SNI (if not same as CERT host)')
     parser.add_argument('-i', '--insecure', default=False, action='store_true', help='Do not verify remote certificate')
+    parser.add_argument('-q', '--quiet', default=False, action='store_true', help='Print only warning/problems')
+    parser.add_argument('-w', '--warn', default=None, metavar='DAYS', nargs='?', type=int, const=20, help='Warn about expiring certificates (def: 20 days)')
     return parser.parse_args()
 
 def get_certificate(host, name=None, port=443, timeout=10, insecure=False):
@@ -52,8 +57,6 @@ def get_certificate(host, name=None, port=443, timeout=10, insecure=False):
 
 def is_local(cert):
     """ guesses is cert is local file or not """
-    if cert.startswith('https://'):
-        return False
     if os.path.exists(cert):
         return True
     return False
@@ -91,7 +94,7 @@ def get_local_cert(CERT):
     return cert
 
 
-def show_cert(CERT, addr, insecure):
+def show_cert(CERT, name=None, insecure=False, quiet=False, warn=False):
 
     def tlist2str(tlist):
         return ' '.join([ '{}={}'.format(t[0].decode(), t[1].decode()) for t in tlist ])
@@ -113,10 +116,11 @@ def show_cert(CERT, addr, insecure):
         if is_local(CERT):
             cert = get_local_cert(CERT)
         else:
-            cert = get_remote_cert(CERT, addr, insecure)
+            cert = get_remote_cert(CERT, name, insecure)
     except ssl.SSLCertVerificationError as e:
-        print("Certificate verification error (use -i):", e)
-        return
+        print("{CERT} Certificate verification error (use -i): {exception}".format(CERT=CERT, exception=e),
+            file=sys.stderr)
+        return 1
 
     subject = tlist2value(cert.get_subject().get_components(), 'CN')
     names = get_SAN(cert)
@@ -131,17 +135,26 @@ def show_cert(CERT, addr, insecure):
     daysleft = (nafter - datetime.now()).days
     issuer = tlist2str(cert.get_issuer().get_components())
 
-    print("Names:", ' '.join(names))
-    print("notBefore: {nbefore} ({days} days old)".format(nbefore=nbefore, days=daysold))
-    print("notAfter: {nafter} ({days} days left)".format(nafter=nafter, days = daysleft))
-    print("Issuer:", issuer)
 
+    if not quiet:
+        print("Names:", ' '.join(names))
+        print("notBefore: {nbefore} ({days} days old)".format(nbefore=nbefore, days=daysold))
+        print("notAfter: {nafter} ({days} days left)".format(nafter=nafter, days = daysleft))
+        print("Issuer:", issuer)
+
+
+    if warn and daysleft<warn:
+        print("{CERT} expires in {left} days".format(CERT=CERT, left=daysleft),
+            file=sys.stderr)
+        return 1
+
+    return 0
 
 
 def main():
     args = get_args()
 
-    show_cert(args.CERT, args.name, args.insecure)
+    sys.exit(show_cert(CERT=args.CERT, name=args.name, insecure=args.insecure, warn=args.warn, quiet=args.quiet))
 
 
 if __name__ == '__main__':
