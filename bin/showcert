@@ -17,7 +17,7 @@ from collections import namedtuple
 
 
 
-version = '0.0.13'
+version = '0.0.14'
 
 phrase = namedtuple('Phrase', 'say wait expect')
 
@@ -38,11 +38,11 @@ def get_args():
   # check cert for example.com on new.example.com, do not verify
   {me} new.example.com -n example.com -i
 
-  # dump info from local certificate file
-  {me} /etc/letsencrypt/live/example.com/fullchain.pem
+  # dump info from local certificate file(s)
+  {me} *.pem
 
-  # look for expiring letsencrypt certificates
-  for cert in /etc/letsencrypt/live/*/cert.pem; do {me} -q -w 7 $cert; done
+  # look for expiring letsencrypt certificates (:le is alias for /etc/letsencrypt/live/*/cert.pem)
+  {me} :le -q -w
     """.format(me=sys.argv[0])
     parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info v{version}'.format(version=version),
     formatter_class=argparse.RawTextHelpFormatter, epilog=epilog)
@@ -252,7 +252,7 @@ def main():
     args = get_args()
 
     if ':le' in args.CERT:
-        args.CERT = glob.glob('/etc/letsencrypt/live/*/fullchain.pem')
+        args.CERT = glob.glob('/etc/letsencrypt/live/*/cert.pem')
     
     maxrc = 0
     for cert in args.CERT:
