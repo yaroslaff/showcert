@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from cmath import phase
 import os
 import sys
 import argparse
@@ -12,8 +13,22 @@ from datetime import datetime
 from pprint import pprint
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
+from collections import namedtuple
 
-version = '0.0.10'
+
+
+version = '0.0.11'
+
+phrase = namedtuple('Phrase', 'say wait expect')
+
+class CertException(Exception):
+    pass
+
+class InvalidCertificate(CertException):
+    pass
+
+class ServerError(CertException):
+    pass
 
 def get_args():
     epilog = """Examples:  
@@ -31,14 +46,78 @@ def get_args():
     """.format(me=sys.argv[0])
     parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info v{version}'.format(version=version),
     formatter_class=argparse.RawTextHelpFormatter, epilog=epilog)
-    parser.add_argument('CERT', help='/path/cert.pem or google.com or google.com:443')
+    parser.add_argument('CERT', help='/path/cert.pem or glob pattern or :le google.com or google.com:443')
     parser.add_argument('-n', '--name', help='name for SNI (if not same as CERT host)')
     parser.add_argument('-i', '--insecure', default=False, action='store_true', help='Do not verify remote certificate')
     parser.add_argument('-q', '--quiet', default=False, action='store_true', help='Print only warning/problems')
     parser.add_argument('-w', '--warn', default=None, metavar='DAYS', nargs='?', type=int, const=20, help='Warn about expiring certificates (def: 20 days)')
+    parser.add_argument('-t', '--starttls', default='auto', metavar='METHOD', help='starttls method: auto (default), no, imap, smtp, pop3')
     return parser.parse_args()
 
-def get_certificate(host, name=None, port=443, timeout=10, insecure=False):
+
+def conversation(s, script):
+    for ph in script:
+        print(ph, type(ph))
+        if ph.say is not None:
+            s.sendall(ph.say.encode())
+        reply = s.recv(2048).decode('utf8')
+        if ph.wait is not None and ph.wait not in reply:
+            raise ServerError('Not found {} in server reply to {}'.format(ph.wait, reply))
+        if ph.expect is not None and ph.expect not in reply:
+            raise ServerError('Not found {} in server reply to {}'.format(ph.expected, reply))
+
+
+def starttls_imap(s):
+    script = (
+        phrase(None, '\n', None),
+        phrase('a1 CAPABILITY\n', '\n', 'STARTTLS'),
+        phrase('a2 STARTTLS\n','\n', None)
+    )
+    conversation(s, script)
+
+def starttls_smtp(s):
+    script = (
+        phrase(None, '\n', None),
+        phrase('EHLO www-security.com\n', '\n', 'STARTTLS'),
+        phrase('STARTTLS\n','\n', None)
+    )
+    conversation(s, script)
+
+def starttls_pop3(s):
+    script = (
+        phrase(None, '\n', None),
+        phrase('STLS\n', '\n', None),
+    )
+    conversation(s, script)
+
+
+def start_tls(s, method, port):
+
+    port2method_map = {
+        25: 'smtp',
+        110: 'pop3',
+        143: 'imap'
+    }
+
+    method_map ={
+        'imap': starttls_imap,
+        'smtp': starttls_smtp,
+        'pop3': starttls_pop3
+    }
+
+    if method == 'no':
+        return
+
+    if method == 'auto':
+        method = port2method_map[port]
+
+    print("method:", method)
+
+    return method_map[method](s)
+
+
+
+def get_certificate(host, name=None, port=443, timeout=10, insecure=False, starttls='auto'):
     name = name or host
     if insecure:        
         context = ssl._create_unverified_context()
@@ -47,6 +126,9 @@ def get_certificate(host, name=None, port=443, timeout=10, insecure=False):
         context = ssl.create_default_context()
 
     conn = socket.create_connection((host, port))
+    
+    start_tls(conn, starttls, port)
+
     sock = context.wrap_socket(conn, server_hostname=name)
     sock.settimeout(timeout)
     try:
@@ -62,20 +144,20 @@ def is_local(cert):
     return False
 
 
-def get_remote_cert(CERT, name=None, insecure=False):
+def get_remote_cert(location, name=None, insecure=False, starttls='auto'):
     # parse CERT address
 
-    if ':' in CERT:
-        (host, port) = CERT.split(':')
+    if ':' in location:
+        (host, port) = location.split(':')
     else:
-        host = CERT
+        host = location
         port = 443
     
     name = name or host
 
-    m = re.search('(https?:\/\/)?(?P<host>[^/:]+):?(?P<port>\d+)?', CERT)
+    m = re.search('(?P<host>[^/:]+):?(?P<port>\d+)?', location)
     if m is None:
-        print("Can not parse {}".format(CERT))
+        print("Can not parse {}".format(location))
         return
     certhost = m.group('host')
     certport = m.group('port') or '443'
@@ -84,7 +166,7 @@ def get_remote_cert(CERT, name=None, insecure=False):
     host = certhost
     port = certport
 
-    certificate = get_certificate(host, name=name, port=port, insecure=insecure)
+    certificate = get_certificate(host, name=name, port=port, insecure=insecure, starttls=starttls)
 
     cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificate)
     return cert
@@ -94,7 +176,7 @@ def get_local_cert(CERT):
     return cert
 
 
-def show_cert(CERT, name=None, insecure=False, quiet=False, warn=False):
+def show_cert(CERT, name=None, insecure=False, quiet=False, warn=False, starttls='auto'):
 
     def tlist2str(tlist):
         return ' '.join([ '{}={}'.format(t[0].decode(), t[1].decode()) for t in tlist ])
@@ -116,7 +198,7 @@ def show_cert(CERT, name=None, insecure=False, quiet=False, warn=False):
         if is_local(CERT):
             cert = get_local_cert(CERT)
         else:
-            cert = get_remote_cert(CERT, name, insecure)
+            cert = get_remote_cert(location=CERT, name=name, insecure=insecure, starttls=starttls)
     except ssl.SSLCertVerificationError as e:
         print("{CERT} Certificate verification error (use -i): {exception}".format(CERT=CERT, exception=e),
             file=sys.stderr)
@@ -164,7 +246,7 @@ def main():
             maxrc = max(maxrc, rc)
         sys.exit(maxrc)
     else:
-        sys.exit(show_cert(CERT=args.CERT, name=args.name, insecure=args.insecure, warn=args.warn, quiet=args.quiet))
+        sys.exit(show_cert(CERT=args.CERT, name=args.name, insecure=args.insecure, warn=args.warn, quiet=args.quiet, starttls=args.starttls))
 
 
 if __name__ == '__main__':
