@@ -17,7 +17,7 @@ from collections import namedtuple
 
 
 
-version = '0.0.12'
+version = '0.0.13'
 
 phrase = namedtuple('Phrase', 'say wait expect')
 
@@ -108,7 +108,11 @@ def start_tls(s, method, port):
         return
 
     if method == 'auto':
-        method = port2method_map[port]
+        try:
+            method = port2method_map[port]
+        except KeyError:
+            # no special handling needed
+            return
 
     return method_map[method](s)
 
