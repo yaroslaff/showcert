@@ -34,12 +34,12 @@ If `-w DAYS` used, non-zero will be returned for valid certificates, which will 
 ## Usage
 
 ~~~shell
-usage: showcert [-h] [-n NAME] [-i] [-q] [-w [DAYS]] CERT
+usage: showcert [-h] [-n NAME] [-i] [-q] [-w [DAYS]] [-t METHOD] CERT [CERT ...]
 
-Show local/remote SSL certificate info v0.0.8
+Show local/remote SSL certificate info v0.0.14
 
 positional arguments:
-  CERT                  /path/cert.pem or google.com or google.com:443
+  CERT                  /path/cert.pem or glob pattern or :le google.com or google.com:443
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -48,6 +48,8 @@ optional arguments:
   -q, --quiet           Print only warning/problems
   -w [DAYS], --warn [DAYS]
                         Warn about expiring certificates (def: 20 days)
+  -t METHOD, --starttls METHOD
+                        starttls method: auto (default, and OK almost always), no, imap, smtp, pop3
 
 Examples:  
   # just check remote certificate
@@ -56,9 +58,9 @@ Examples:
   # check cert for example.com on new.example.com, do not verify
   /usr/local/bin/showcert new.example.com -n example.com -i
 
-  # dump info from local certificate file
-  /usr/local/bin/showcert /etc/letsencrypt/live/example.com/fullchain.pem
+  # dump info from local certificate file(s)
+  /usr/local/bin/showcert *.pem
 
-  # verify cert quietly and print to stderr only if it will expire in one week
-  /usr/local/bin/showcert -q -w 7 github.com
+  # look for expiring letsencrypt certificates (:le is alias for /etc/letsencrypt/live/*/cert.pem)
+  /usr/local/bin/showcert :le -q -w
 ~~~
