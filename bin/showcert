@@ -64,7 +64,7 @@ def conversation(s, script):
         if ph.wait is not None and ph.wait not in reply:
             raise ServerError('Not found {} in server reply to {}'.format(ph.wait, reply))
         if ph.expect is not None and ph.expect not in reply:
-            raise ServerError('Not found {} in server reply to {}'.format(ph.expected, reply))
+            raise ServerError('Not found {} in server reply to {}'.format(ph.expect, reply))
 
 
 def starttls_imap(s):
