@@ -62,9 +62,9 @@ def conversation(s, script):
             s.sendall(ph.say.encode())
         reply = s.recv(2048).decode('utf8')
         if ph.wait is not None and ph.wait not in reply:
-            raise ServerError('Not found {} in server reply to {}'.format(ph.wait, reply))
+            raise ServerError('Not found {!r} in server reply {!r} to {!r}'.format(ph.wait, reply, ph.say))
         if ph.expect is not None and ph.expect not in reply:
-            raise ServerError('Not found {} in server reply to {}'.format(ph.expect, reply))
+            raise ServerError('Not found {!r} in server reply {!r} to {!r}'.format(ph.expect, reply, ph.say))
 
 
 def starttls_imap(s):
@@ -246,7 +246,10 @@ def main():
             maxrc = max(maxrc, rc)
         sys.exit(maxrc)
     else:
-        sys.exit(show_cert(CERT=args.CERT, name=args.name, insecure=args.insecure, warn=args.warn, quiet=args.quiet, starttls=args.starttls))
+        try:
+            sys.exit(show_cert(CERT=args.CERT, name=args.name, insecure=args.insecure, warn=args.warn, quiet=args.quiet, starttls=args.starttls))
+        except CertException as e:
+            print(e)
 
 
 if __name__ == '__main__':
