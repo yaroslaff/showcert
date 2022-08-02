@@ -57,7 +57,6 @@ def get_args():
 
 def conversation(s, script):
     for ph in script:
-        print(ph, type(ph))
         if ph.say is not None:
             s.sendall(ph.say.encode())
         reply = s.recv(2048).decode('utf8')
@@ -110,8 +109,6 @@ def start_tls(s, method, port):
 
     if method == 'auto':
         method = port2method_map[port]
-
-    print("method:", method)
 
     return method_map[method](s)
 
