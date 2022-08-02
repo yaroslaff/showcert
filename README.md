@@ -12,12 +12,17 @@ Issuer: C=US O=DigiCert Inc CN=DigiCert TLS Hybrid ECC SHA384 2020 CA1
 Also:
 - `showcert /etc/ssl/certs/ssl-cert-snakeoil.pem` (show certificate from local file)
 - `showcert imap.gmail.com:995` (show certificate for gmail IMAP)
+- `showcert pop.yandex.ru:110` (show cert for yandex POP3, yes, it will do STARTTLS automatically)
 - `showcert -i -n google.com localhost` (show certificate for google.com on my local server, even if it's not valid)
-- `for cert in /etc/letsencrypt/live/*/cert.pem; do {me} -q -w $cert; done` (Look for expiring LetsEncrypt certificates)
+- `showcert *.pem -q -w` - quietly check all *.pem file in current directory, and warn if any expires soon
+- `showcert :le` - same as `showcert /etc/letsencrypt/live/*/cert.pem`
 
+
+## STARTTLS implementation
+showcert has built-in support for STARTTLS for SMTP (port 25), POP3 (port 110) and IMAP (port 143). You can select proper method with `--starttls` option (or disable it with `--starttls no`), but default value ('auto') is OK for most cases. This option is needed only if you test servers on non-standard ports.
 
 ## Limitations
-showcert shows only first certificate from PEM file (if there are many) and shows only certificate presented over SSL connection, but can not, for example, verify SMTP STARTTLS certificate (you can verify it locally, but not over network).
+showcert shows only first certificate from PEM file (if there are many)
 
 ## Installation
 `pip3 install showcert`

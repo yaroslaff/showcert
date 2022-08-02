@@ -17,7 +17,7 @@ from collections import namedtuple
 
 
 
-version = '0.0.11'
+version = '0.0.12'
 
 phrase = namedtuple('Phrase', 'say wait expect')
 
@@ -46,7 +46,7 @@ def get_args():
     """.format(me=sys.argv[0])
     parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info v{version}'.format(version=version),
     formatter_class=argparse.RawTextHelpFormatter, epilog=epilog)
-    parser.add_argument('CERT', help='/path/cert.pem or glob pattern or :le google.com or google.com:443')
+    parser.add_argument('CERT', nargs='+', help='/path/cert.pem or glob pattern or :le google.com or google.com:443')
     parser.add_argument('-n', '--name', help='name for SNI (if not same as CERT host)')
     parser.add_argument('-i', '--insecure', default=False, action='store_true', help='Do not verify remote certificate')
     parser.add_argument('-q', '--quiet', default=False, action='store_true', help='Print only warning/problems')
@@ -184,12 +184,23 @@ def show_cert(CERT, name=None, insecure=False, quiet=False, warn=False, starttls
                 return t[1].decode()
 
     def get_SAN(cert):
+
+        def safestr(x):
+            try:
+                return str(x)
+            except:
+                return ''
+
         extensions = (cert.get_extension(i) for i in range(cert.get_extension_count()))
-        extension_data = {e.get_short_name().decode(): str(e) for e in extensions}
+
+        extension_data = {e.get_short_name().decode(): safestr(e) for e in extensions}
+
         try:
             return [ n.split(':')[1] for n in extension_data['subjectAltName'].split(',') ]
         except KeyError:
             return [] # No subjectAltName
+        except IndexError:
+            raise InvalidCertificate('Unusual certificate, cannot parse SubjectAltName')
 
     try:
         if is_local(CERT):
@@ -203,10 +214,13 @@ def show_cert(CERT, name=None, insecure=False, quiet=False, warn=False, starttls
 
     subject = tlist2value(cert.get_subject().get_components(), 'CN')
     names = get_SAN(cert)
+
     if subject in names:
         names.remove(subject)
     
-    names.insert(0, subject)
+    if subject:
+        # add only if Subject exists (yes, not always)
+        names.insert(0, subject)
 
     nbefore = datetime.strptime(cert.get_notBefore().decode(), '%Y%m%d%H%M%SZ')
     nafter = datetime.strptime(cert.get_notAfter().decode(), '%Y%m%d%H%M%SZ')
@@ -233,20 +247,17 @@ def show_cert(CERT, name=None, insecure=False, quiet=False, warn=False, starttls
 def main():
     args = get_args()
 
-    if args.CERT == ':le':
-        args.CERT = '/etc/letsencrypt/live/*/fullchain.pem'
+    if ':le' in args.CERT:
+        args.CERT = glob.glob('/etc/letsencrypt/live/*/fullchain.pem')
     
-    if '*' in args.CERT or '?' in args.CERT:
-        maxrc = 0
-        for cert in glob.glob(args.CERT):
-            rc = show_cert(cert, name=args.name, insecure=args.insecure, warn=args.warn, quiet=args.quiet)
-            maxrc = max(maxrc, rc)
-        sys.exit(maxrc)
-    else:
+    maxrc = 0
+    for cert in args.CERT:
         try:
-            sys.exit(show_cert(CERT=args.CERT, name=args.name, insecure=args.insecure, warn=args.warn, quiet=args.quiet, starttls=args.starttls))
+            rc = show_cert(CERT=cert, name=args.name, insecure=args.insecure, warn=args.warn, quiet=args.quiet, starttls=args.starttls)
+            maxrc = max(maxrc, rc)
         except CertException as e:
-            print(e)
+            print("{}: {}".format(cert, e))
+    sys.exit(maxrc)
 
 
 if __name__ == '__main__':
