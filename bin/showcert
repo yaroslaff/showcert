@@ -7,12 +7,13 @@ import re
 import ssl
 import socket
 import OpenSSL
+import glob
 from datetime import datetime
 from pprint import pprint
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
-version = '0.0.9'
+version = '0.0.10'
 
 def get_args():
     epilog = """Examples:  
@@ -153,7 +154,17 @@ def show_cert(CERT, name=None, insecure=False, quiet=False, warn=False):
 def main():
     args = get_args()
 
-    sys.exit(show_cert(CERT=args.CERT, name=args.name, insecure=args.insecure, warn=args.warn, quiet=args.quiet))
+    if args.CERT == ':le':
+        args.CERT = '/etc/letsencrypt/live/*/fullchain.pem'
+    
+    if '*' in args.CERT or '?' in args.CERT:
+        maxrc = 0
+        for cert in glob.glob(args.CERT):
+            rc = show_cert(cert, name=args.name, insecure=args.insecure, warn=args.warn, quiet=args.quiet)
+            maxrc = max(maxrc, rc)
+        sys.exit(maxrc)
+    else:
+        sys.exit(show_cert(CERT=args.CERT, name=args.name, insecure=args.insecure, warn=args.warn, quiet=args.quiet))
 
 
 if __name__ == '__main__':
