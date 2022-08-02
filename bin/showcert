@@ -51,7 +51,7 @@ def get_args():
     parser.add_argument('-i', '--insecure', default=False, action='store_true', help='Do not verify remote certificate')
     parser.add_argument('-q', '--quiet', default=False, action='store_true', help='Print only warning/problems')
     parser.add_argument('-w', '--warn', default=None, metavar='DAYS', nargs='?', type=int, const=20, help='Warn about expiring certificates (def: 20 days)')
-    parser.add_argument('-t', '--starttls', default='auto', metavar='METHOD', help='starttls method: auto (default), no, imap, smtp, pop3')
+    parser.add_argument('-t', '--starttls', default='auto', metavar='METHOD', help='starttls method: auto (default, and OK almost always), no, imap, smtp, pop3')
     return parser.parse_args()
 
 
