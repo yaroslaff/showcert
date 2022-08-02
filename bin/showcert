@@ -46,7 +46,7 @@ def get_args():
     """.format(me=sys.argv[0])
     parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info v{version}'.format(version=version),
     formatter_class=argparse.RawTextHelpFormatter, epilog=epilog)
-    parser.add_argument('CERT', nargs='+', help='/path/cert.pem or glob pattern or :le google.com or google.com:443')
+    parser.add_argument('CERT', nargs='+', help='path, glob pattern, ":le", hostname or hostname:port')
     parser.add_argument('-n', '--name', help='name for SNI (if not same as CERT host)')
     parser.add_argument('-i', '--insecure', default=False, action='store_true', help='Do not verify remote certificate')
     parser.add_argument('-q', '--quiet', default=False, action='store_true', help='Print only warning/problems')

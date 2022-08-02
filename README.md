@@ -39,7 +39,7 @@ usage: showcert [-h] [-n NAME] [-i] [-q] [-w [DAYS]] [-t METHOD] CERT [CERT ...]
 Show local/remote SSL certificate info v0.0.14
 
 positional arguments:
-  CERT                  /path/cert.pem or glob pattern or :le google.com or google.com:443
+  CERT                  path, glob pattern, ":le", hostname or hostname:port
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -53,14 +53,14 @@ optional arguments:
 
 Examples:  
   # just check remote certificate
-  /usr/local/bin/showcert example.com
+  bin/showcert example.com
 
   # check cert for example.com on new.example.com, do not verify
-  /usr/local/bin/showcert new.example.com -n example.com -i
+  bin/showcert new.example.com -n example.com -i
 
   # dump info from local certificate file(s)
-  /usr/local/bin/showcert *.pem
+  bin/showcert *.pem
 
   # look for expiring letsencrypt certificates (:le is alias for /etc/letsencrypt/live/*/cert.pem)
-  /usr/local/bin/showcert :le -q -w
+  bin/showcert :le -q -w
 ~~~
