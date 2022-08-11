@@ -23,7 +23,7 @@ from collections import namedtuple
 
 
 
-version = '0.1.0'
+version = '0.1.1'
 args = None
 
 phrase = namedtuple('Phrase', 'say wait expect')
@@ -52,10 +52,13 @@ def get_args():
 
   # look for expiring letsencrypt certificates (:le is alias for /etc/letsencrypt/live/*/cert.pem)
   {me} :le -q -w
+
+  # 'steal' fullchain.pem from server:
+  {me} --chain --raw google.com > fullchain.pem
     """.format(me=sys.argv[0])
     parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info v{version}'.format(version=version),
     formatter_class=argparse.RawTextHelpFormatter, epilog=epilog)
-    parser.add_argument('CERT', nargs='+', help='path, glob pattern, ":le", hostname or hostname:port')
+    parser.add_argument('CERT', nargs='+', help='path, - (stdin), ":le" (letsencrypt cert path), hostname or hostname:port')
     parser.add_argument('-n', '--name', help='name for SNI (if not same as CERT host)')
     parser.add_argument('-i', '--insecure', default=False, action='store_true', help='Do not verify remote certificate')
     parser.add_argument('--raw', default=False, action='store_true', help='Dump raw certificate in PEM format')

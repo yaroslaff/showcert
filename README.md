@@ -16,6 +16,7 @@ Also:
 - `showcert -i -n google.com localhost` (show certificate for google.com on my local server, even if it's not valid)
 - `showcert *.pem -q -w` - quietly check all *.pem files in current directory, and warn if any expires soon
 - `showcert :le` - same as `showcert /etc/letsencrypt/live/*/cert.pem`
+- `showcert google.com --chain --raw > fullchain.pem` - 'steal' google fullchain.pem (without privkey, obviously)
 
 
 ## STARTTLS implementation
@@ -34,33 +35,23 @@ If `-w DAYS` used, non-zero will be returned for valid certificates, which will 
 ## Usage
 
 ~~~shell
-usage: showcert [-h] [-n NAME] [-i] [-q] [-w [DAYS]] [-t METHOD] CERT [CERT ...]
+usage: showcert [-h] [-n NAME] [-i] [--raw] [-c] [-q] [-w [DAYS]] [-t METHOD] [--ca CA] CERT [CERT ...]
 
-Show local/remote SSL certificate info v0.0.14
+Show local/remote SSL certificate info v0.1.0
 
 positional arguments:
-  CERT                  path, glob pattern, ":le", hostname or hostname:port
+  CERT                  path, - (stdin), ":le" (letsencrypt cert path), hostname or hostname:port
 
 optional arguments:
   -h, --help            show this help message and exit
   -n NAME, --name NAME  name for SNI (if not same as CERT host)
   -i, --insecure        Do not verify remote certificate
+  --raw                 Dump raw certificate in PEM format
+  -c, --chain           Show chain (not only server certificate)
   -q, --quiet           Print only warning/problems
   -w [DAYS], --warn [DAYS]
                         Warn about expiring certificates (def: 20 days)
   -t METHOD, --starttls METHOD
                         starttls method: auto (default, and OK almost always), no, imap, smtp, pop3
-
-Examples:  
-  # just check remote certificate
-  bin/showcert example.com
-
-  # check cert for example.com on new.example.com, do not verify
-  bin/showcert new.example.com -n example.com -i
-
-  # dump info from local certificate file(s)
-  bin/showcert *.pem
-
-  # look for expiring letsencrypt certificates (:le is alias for /etc/letsencrypt/live/*/cert.pem)
-  bin/showcert :le -q -w
+  --ca CA               path to trusted CA certificates, def: /usr/local/lib/python3.9/dist-packages/certifi/cacert.pem
 ~~~
