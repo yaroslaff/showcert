@@ -15,7 +15,7 @@ Also:
 - `showcert pop.yandex.ru:110` (show cert for yandex POP3, yes, it will do STARTTLS automatically)
 - `showcert -i -n google.com localhost` (show certificate for google.com on my local server, even if it's not valid)
 - `showcert *.pem -q -w` - quietly check all *.pem files in current directory, and warn if any expires soon
-- `showcert :le` - same as `showcert /etc/letsencrypt/live/*/cert.pem`
+- `showcert :le` - same as `showcert /etc/letsencrypt/live/*/fullchain.pem`
 - `showcert google.com --chain --raw > fullchain.pem` - 'steal' google fullchain.pem (without privkey, obviously)
 
 

@@ -23,7 +23,7 @@ from collections import namedtuple
 
 
 
-version = '0.1.1'
+version = '0.1.2'
 args = None
 
 phrase = namedtuple('Phrase', 'say wait expect')
@@ -50,7 +50,7 @@ def get_args():
   # dump info from local certificate file(s)
   {me} *.pem
 
-  # look for expiring letsencrypt certificates (:le is alias for /etc/letsencrypt/live/*/cert.pem)
+  # look for expiring letsencrypt certificates (:le is alias for /etc/letsencrypt/live/*/fullchain.pem)
   {me} :le -q -w
 
   # 'steal' fullchain.pem from server:
@@ -369,7 +369,7 @@ def main():
     args = get_args()
 
     if ':le' in args.CERT:
-        args.CERT = glob.glob('/etc/letsencrypt/live/*/cert.pem')
+        args.CERT = glob.glob('/etc/letsencrypt/live/*/fullchain.pem')
     
     maxrc = 0
     for cert in args.CERT:
