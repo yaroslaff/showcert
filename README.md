@@ -10,27 +10,25 @@ Issuer: C=US O=DigiCert Inc CN=DigiCert TLS Hybrid ECC SHA384 2020 CA1
 ~~~
 
 Also:
-- `showcert /etc/ssl/certs/ssl-cert-snakeoil.pem` (show certificate from local file)
-- `showcert imap.gmail.com:995` (show certificate for gmail IMAP)
-- `showcert pop.yandex.ru:110` (show cert for yandex POP3, yes, it will do STARTTLS automatically)
+- `showcert pop.gmail.com:995` (show certificate for gmail POP3 over SSL)
+- `showcert pop.yandex.ru:110` (show cert for yandex POP3. Yes, it will do STARTTLS automatically)
 - `showcert -i -n google.com localhost` (show certificate for google.com on my local server, even if it's not valid)
 - `showcert *.pem -q -w` - quietly check all *.pem files in current directory, and warn if any expires soon
+- `showcert /etc/ssl/certs/ssl-cert-snakeoil.pem` (show certificate from local file, or from stdin if path is `-`)
 - `showcert :le` - same as `showcert /etc/letsencrypt/live/*/fullchain.pem`
-- `showcert google.com --chain --raw > fullchain.pem` - 'steal' google fullchain.pem (without privkey, obviously)
+- `showcert google.com --chain --raw > fullchain.pem` - 'steal' remote server fullchain.pem (without privkey, obviously)
 
 
 ## STARTTLS implementation
-showcert has built-in support for STARTTLS for SMTP (port 25), POP3 (port 110) and IMAP (port 143). You can select proper method with `--starttls` option (or disable it with `--starttls no`), but default value ('auto') is OK for most cases. This option is needed only if you test servers on non-standard ports.
+showcert has built-in support for STARTTLS for SMTP (port 25), POP3 (port 110) and IMAP (port 143). You can select proper method with `--starttls` option (or disable it with `--starttls no`), but default value (`auto`) is OK for most cases. This option is needed only if you test servers on non-standard ports.
 
-## Limitations
-showcert shows only first certificate from PEM file (if there are many)
 
 ## Installation
 `pip3 install showcert`
 
 ## Exit code
-showcert will return non-zero exit code in case of any error (including expired certificate or host mismatch).
-If `-w DAYS` used, non-zero will be returned for valid certificates, which will expire in `DAYS` days or sooner.
+showcert will return non-zero exit code (1) in case of any error (including expired certificate or host mismatch).
+If `-w DAYS` used, non-zero (2) will be returned for valid certificates, which will expire in `DAYS` days or sooner.
 
 ## Usage
 
