@@ -19,15 +19,20 @@ Also:
 
 LetsEncrypt specific features:
 - `showcert -w 30 :le` - same as `showcert -w 30 /etc/letsencrypt/live/*/fullchain.pem`. Warn
-- ``certbot certonly --webroot PATH `showcert -o dnames example.com``` - generate LetsEncrypt certificate, using showcert to obtain list if domain names like `-d example.com -d www.example.com`.
-
+- `showcert -o dnames example.com` - list all names from certificate (as `-o names`), but each name prepended with `-d`. e.g. `-d example.com -d www.example.com`. Useful to use with certbot to generate new certificate from existing cert or site. E.g.:
+~~~
+certbot certonly --webroot /var/www/PATH `showcert -o dnames example.com`
+~~~
 
 ## STARTTLS implementation
 showcert has built-in support for STARTTLS for SMTP (port 25), POP3 (port 110) and IMAP (port 143). You can select proper method with `--starttls` option (or disable it with `--starttls no`), but default value (`auto`) is OK for most cases. This option is needed only if you test servers on non-standard ports.
 
 
 ## Installation
-`pip3 install showcert`
+As any usual python package:
+- `pip3 install showcert` (just install)
+- `pip3 install -U showcert` (upgrade)
+- `pop3 install -U git+https://github.com/yaroslaff/showcert` (install/upgrade from git)
 
 ## Exit code
 showcert will return non-zero exit code (1) in case of any error (including expired certificate or host mismatch).
