@@ -22,7 +22,7 @@ from collections import namedtuple
 
 
 
-version = '0.1.2'
+version = '0.1.3'
 args = None
 
 phrase = namedtuple('Phrase', 'say wait expect')
@@ -50,16 +50,16 @@ def get_args():
   {me} *.pem
 
   # look for expiring letsencrypt certificates (:le is alias for /etc/letsencrypt/live/*/fullchain.pem)
-  {me} :le -q -w
+  {me} :le -w
 
   # 'steal' fullchain.pem from server:
-  {me} --chain --raw google.com > fullchain.pem
+  {me} --chain -o pem google.com > fullchain.pem
     """.format(me=sys.argv[0])
     parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info v{version}'.format(version=version),
     formatter_class=argparse.RawTextHelpFormatter, epilog=epilog)
     parser.add_argument('CERT', nargs='+', help='path, - (stdin), ":le" (letsencrypt cert path), hostname or hostname:port')
     parser.add_argument('-i', '--insecure', default=False, action='store_true', help='Do not verify remote certificate')
-    parser.add_argument('--output', '-o', default='brief', help='output format. One of: brief, full, names, pem, no')
+    parser.add_argument('--output', '-o', default='brief', help='output format: brief, full, names, dnames (for certbot), pem, no.')
     parser.add_argument('-c','--chain', default=False, action='store_true', help='Show chain (not only server certificate)')
     parser.add_argument('-w', '--warn', default=None, metavar='DAYS', nargs='?', type=int, const=20, help='Warn about expiring certificates (def: 20 days)')
 
@@ -304,6 +304,12 @@ def print_names(crt):
 
     print(' '.join(names))
 
+
+def print_dnames(crt):
+    names = get_names(crt)
+    print('-d', ' -d '.join(names))
+
+
 def print_cert(crt, location=None):
 
     def tlist2str(tlist):
@@ -385,9 +391,17 @@ def process_cert(CERT, name=None, insecure=False, warn=False, starttls='auto'):
                 print()
             print_names(_c)
 
+    elif out == 'dnames':
+        for i,_c in enumerate(chain):
+            if i>0:
+                print()
+            print_dnames(_c)
+
     elif out == 'no' or out[0] == 'quiet':
         pass
 
+    else:
+        print("unknown output (-o) format", file=sys.stderr)
 
     return retcode
 

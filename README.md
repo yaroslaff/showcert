@@ -13,10 +13,13 @@ Also:
 - `showcert pop.gmail.com:995` (show certificate for gmail POP3 over SSL)
 - `showcert pop.yandex.ru:110` (show cert for yandex POP3. Yes, it will do STARTTLS automatically)
 - `showcert -i -n google.com localhost` (show certificate for google.com on my local server, even if it's not valid)
-- `showcert *.pem -q -w` - quietly check all *.pem files in current directory, and warn if any expires soon
+- `showcert *.pem -w` - check all *.pem files in current directory, and warn if any expires soon. Add `-o no` for quiet mode
 - `showcert /etc/ssl/certs/ssl-cert-snakeoil.pem` (show certificate from local file, or from stdin if path is `-`)
-- `showcert :le` - same as `showcert /etc/letsencrypt/live/*/fullchain.pem`
-- `showcert google.com --chain --raw > fullchain.pem` - 'steal' remote server fullchain.pem (without privkey, obviously)
+- `showcert google.com --chain -o pem > fullchain.pem` - 'steal' remote server fullchain.pem (without privkey, obviously)
+
+LetsEncrypt specific features:
+- `showcert -w 30 :le` - same as `showcert -w 30 /etc/letsencrypt/live/*/fullchain.pem`. Warn
+- ``certbot certonly --webroot PATH `showcert -o dnames example.com``` - generate LetsEncrypt certificate, using showcert to obtain list if domain names like `-d example.com -d www.example.com`.
 
 
 ## STARTTLS implementation
@@ -33,23 +36,26 @@ If `-w DAYS` used, non-zero (2) will be returned for valid certificates, which w
 ## Usage
 
 ~~~shell
-usage: showcert [-h] [-n NAME] [-i] [--raw] [-c] [-q] [-w [DAYS]] [-t METHOD] [--ca CA] CERT [CERT ...]
+usage: showcert [-h] [-i] [--output OUTPUT] [-c] [-w [DAYS]] [-n NAME] [-t METHOD] [--ca CA] CERT [CERT ...]
 
-Show local/remote SSL certificate info v0.1.0
+Show local/remote SSL certificate info v0.1.3
 
 positional arguments:
   CERT                  path, - (stdin), ":le" (letsencrypt cert path), hostname or hostname:port
 
 optional arguments:
   -h, --help            show this help message and exit
-  -n NAME, --name NAME  name for SNI (if not same as CERT host)
   -i, --insecure        Do not verify remote certificate
-  --raw                 Dump raw certificate in PEM format
+  --output OUTPUT, -o OUTPUT
+                        output format: brief, full, names, dnames (for certbot), pem, no.
   -c, --chain           Show chain (not only server certificate)
-  -q, --quiet           Print only warning/problems
   -w [DAYS], --warn [DAYS]
                         Warn about expiring certificates (def: 20 days)
+
+Rarely needed options:
+  -n NAME, --name NAME  name for SNI (if not same as CERT host)
   -t METHOD, --starttls METHOD
                         starttls method: auto (default, and OK almost always), no, imap, smtp, pop3
-  --ca CA               path to trusted CA certificates, def: /usr/local/lib/python3.9/dist-packages/certifi/cacert.pem
+  --ca CA               path to trusted CA certificates, def: /home/xenon/.local/lib/python3.9/site-packages/certifi/cacert.pem
+
 ~~~
