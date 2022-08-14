@@ -18,7 +18,7 @@ Also:
 - `showcert google.com --chain -o pem > fullchain.pem` - 'steal' remote server fullchain.pem (without privkey, obviously)
 
 LetsEncrypt specific features:
-- `showcert -w 30 :le` - same as `showcert -w 30 /etc/letsencrypt/live/*/fullchain.pem`. Warn
+- `showcert -w 10 :le` - same as `showcert -w 30 /etc/letsencrypt/live/*/fullchain.pem`. Warn if expire in less then 10 days. Non-zero exit if at least one certificate is expiring.
 - `showcert -o dnames example.com` - list all names from certificate (as `-o names`), but each name prepended with `-d`. e.g. `-d example.com -d www.example.com`. Useful to use with certbot to generate new certificate from existing cert or site. E.g.:
 ~~~
 certbot certonly --webroot /var/www/PATH `showcert -o dnames example.com`
