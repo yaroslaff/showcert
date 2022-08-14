@@ -8,7 +8,7 @@ import re
 import ssl
 import socket
 # import OpenSSL
-from OpenSSL.crypto import FILETYPE_PEM, load_certificate, \
+from OpenSSL.crypto import FILETYPE_PEM, FILETYPE_TEXT, load_certificate, \
     dump_certificate, X509Store, X509StoreContext, \
     X509StoreContextError
 from OpenSSL import SSL
@@ -16,7 +16,6 @@ import pem
 import certifi
 import glob
 from datetime import datetime
-from pprint import pprint
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from collections import namedtuple
@@ -59,14 +58,16 @@ def get_args():
     parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info v{version}'.format(version=version),
     formatter_class=argparse.RawTextHelpFormatter, epilog=epilog)
     parser.add_argument('CERT', nargs='+', help='path, - (stdin), ":le" (letsencrypt cert path), hostname or hostname:port')
-    parser.add_argument('-n', '--name', help='name for SNI (if not same as CERT host)')
     parser.add_argument('-i', '--insecure', default=False, action='store_true', help='Do not verify remote certificate')
-    parser.add_argument('--raw', default=False, action='store_true', help='Dump raw certificate in PEM format')
+    parser.add_argument('--output', '-o', default='brief', help='output format. One of: brief, full, names, pem, no')
     parser.add_argument('-c','--chain', default=False, action='store_true', help='Show chain (not only server certificate)')
-    parser.add_argument('-q', '--quiet', default=False, action='store_true', help='Print only warning/problems')
     parser.add_argument('-w', '--warn', default=None, metavar='DAYS', nargs='?', type=int, const=20, help='Warn about expiring certificates (def: 20 days)')
-    parser.add_argument('-t', '--starttls', default='auto', metavar='METHOD', help='starttls method: auto (default, and OK almost always), no, imap, smtp, pop3')
-    parser.add_argument('--ca', default=def_ca, help="path to trusted CA certificates, def: {}".format(def_ca))
+
+    g = parser.add_argument_group('Rarely needed options')
+    g.add_argument('-n', '--name', help='name for SNI (if not same as CERT host)')
+    g.add_argument('-t', '--starttls', default='auto', metavar='METHOD', help='starttls method: auto (default, and OK almost always), no, imap, smtp, pop3')
+    g.add_argument('--ca', default=def_ca, help="path to trusted CA certificates, def: {}".format(def_ca))
+
     return parser.parse_args()
 
 
@@ -295,6 +296,14 @@ def get_names(crt):
     return names
 
 
+def print_full_cert(crt):
+    print(dump_certificate(FILETYPE_TEXT, crt).decode())
+
+def print_names(crt):
+    names = get_names(crt)
+
+    print(' '.join(names))
+
 def print_cert(crt, location=None):
 
     def tlist2str(tlist):
@@ -308,17 +317,16 @@ def print_cert(crt, location=None):
 
     names = get_names(crt)
 
-    if not args.quiet:
-        print("Names:", ' '.join(names))
-        print("notBefore: {nbefore} ({days} days old)".format(nbefore=nbefore, days=daysold))
-        print("notAfter: {nafter} ({days} days left)".format(nafter=nafter, days = daysleft))
-        print("Issuer:", issuer)
+    print("Names:", ' '.join(names))
+    print("notBefore: {nbefore} ({days} days old)".format(nbefore=nbefore, days=daysold))
+    print("notAfter: {nafter} ({days} days left)".format(nafter=nafter, days = daysleft))
+    print("Issuer:", issuer)
 
-
-def process_cert(CERT, name=None, insecure=False, quiet=False, warn=False, starttls='auto'):
+def process_cert(CERT, name=None, insecure=False, warn=False, starttls='auto'):
 
     retcode = 0
     hostname = None
+    out = args.output.lower()
 
     try:
         if is_local(CERT):
@@ -344,21 +352,42 @@ def process_cert(CERT, name=None, insecure=False, quiet=False, warn=False, start
     if not args.chain:
         chain = chain[0:1]
 
-    if args.raw:
+
+    # set retcode
+    left = get_days_left(chain[0])
+    if args.warn is not None and left<args.warn:
+        print("{CERT} expires in {left} days".format(CERT=CERT, left=left),
+            file=sys.stderr)
+        retcode = 2
+
+
+    # output
+    if out == 'raw' or out == 'pem':
         for _c in chain:
             r = dump_certificate(FILETYPE_PEM, _c)
             print(r.decode(), end='')
         return 0
+    elif out == 'brief':
+        for i,_c in enumerate(chain):
+            if i>0:
+                print()
+            print_cert(_c, location=CERT)
 
-    for i,_c in enumerate(chain):
-        if i>0:
-            print()
-        print_cert(_c, location=CERT)
-        left = get_days_left(_c)
-        if args.warn is not None and left<args.warn:
-            print("{CERT} expires in {left} days".format(CERT=CERT, left=left),
-                file=sys.stderr)
-            retcode = 2
+    elif out == 'full':
+        for i,_c in enumerate(chain):
+            if i>0:
+                print()
+            print_full_cert(_c)
+    
+    elif out == 'names':
+        for i,_c in enumerate(chain):
+            if i>0:
+                print()
+            print_names(_c)
+
+    elif out == 'no' or out[0] == 'quiet':
+        pass
+
 
     return retcode
 
@@ -374,7 +403,7 @@ def main():
     maxrc = 0
     for cert in args.CERT:
         try:
-            rc = process_cert(CERT=cert, name=args.name, insecure=args.insecure, warn=args.warn, quiet=args.quiet, starttls=args.starttls)
+            rc = process_cert(CERT=cert, name=args.name, insecure=args.insecure, warn=args.warn, starttls=args.starttls)
             maxrc = max(maxrc, rc)
         except CertException as e:
             print("{}: {}".format(cert, e))
