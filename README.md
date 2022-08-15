@@ -41,9 +41,9 @@ If `-w DAYS` used, non-zero (2) will be returned for valid certificates, which w
 ## Usage
 
 ~~~shell
-usage: showcert [-h] [-i] [--output OUTPUT] [-c] [-w [DAYS]] [-n NAME] [-t METHOD] [--ca CA] CERT [CERT ...]
+usage: showcert [-h] [-i] [--output OUTPUT] [-c] [-w [DAYS]] [-q] [-n NAME] [-t METHOD] [--ca CA] CERT [CERT ...]
 
-Show local/remote SSL certificate info v0.1.3
+Show local/remote SSL certificate info v0.1.4
 
 positional arguments:
   CERT                  path, - (stdin), ":le" (letsencrypt cert path), hostname or hostname:port
@@ -58,9 +58,9 @@ optional arguments:
                         Warn about expiring certificates (def: 20 days)
 
 Rarely needed options:
+  -q, --quiet           Quiet mode, same as --output no
   -n NAME, --name NAME  name for SNI (if not same as CERT host)
   -t METHOD, --starttls METHOD
                         starttls method: auto (default, and OK almost always), no, imap, smtp, pop3
-  --ca CA               path to trusted CA certificates, def: /home/xenon/.local/lib/python3.9/site-packages/certifi/cacert.pem
-
+  --ca CA               path to trusted CA certificates, def: /usr/local/lib/python3.9/dist-packages/certifi/cacert.pem
 ~~~
