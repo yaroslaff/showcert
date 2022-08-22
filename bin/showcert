@@ -22,7 +22,7 @@ from collections import namedtuple
 
 
 
-version = '0.1.6'
+version = '0.1.7'
 args = None
 
 phrase = namedtuple('Phrase', 'say wait expect')
