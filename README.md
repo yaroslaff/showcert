@@ -10,11 +10,11 @@ Issuer: C=US O=DigiCert Inc CN=DigiCert TLS Hybrid ECC SHA384 2020 CA1
 ~~~
 
 Also:
+- `showcert /etc/ssl/certs/ssl-cert-snakeoil.pem` (show certificate from local file, or from stdin if path is `-`)
+- `showcert *.pem -w` - check all *.pem files in current directory, and warn if any expires soon. Add `-q` for quiet mode
 - `showcert pop.gmail.com:995` (show certificate for gmail POP3 over SSL)
 - `showcert pop.yandex.ru:110` (show cert for yandex POP3. Yes, it will do STARTTLS automatically)
 - `showcert -i -n google.com localhost` (show certificate for google.com on my local server, even if it's not valid)
-- `showcert *.pem -w` - check all *.pem files in current directory, and warn if any expires soon. Add `-o no` for quiet mode
-- `showcert /etc/ssl/certs/ssl-cert-snakeoil.pem` (show certificate from local file, or from stdin if path is `-`)
 - `showcert google.com --chain -o pem > fullchain.pem` - 'steal' remote server fullchain.pem (without privkey, obviously)
 
 LetsEncrypt specific features:
