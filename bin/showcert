@@ -22,7 +22,7 @@ from collections import namedtuple
 
 
 
-version = '0.1.7'
+version = '0.1.9'
 args = None
 
 phrase = namedtuple('Phrase', 'say wait expect')
@@ -38,6 +38,7 @@ class ServerError(CertException):
 
 def get_args():
     def_ca = certifi.where()
+    def_limit = 5
 
     epilog = """Examples:  
   # just check remote certificate
@@ -67,6 +68,7 @@ def get_args():
     g.add_argument('-q', '--quiet', default=False, action='store_true', help='Quiet mode, same as --output no')
     g.add_argument('-n', '--name', help='name for SNI (if not same as CERT host)')
     g.add_argument('-t', '--starttls', default='auto', metavar='METHOD', help='starttls method: auto (default, and OK almost always), no, imap, smtp, pop3')
+    g.add_argument('-l', '--limit', default=def_limit, type=int, metavar='TIME', help='socket timeout (def: {})'.format(def_limit))
     g.add_argument('--ca', default=def_ca, help="path to trusted CA certificates, def: {}".format(def_ca))
 
     return parser.parse_args()
@@ -151,6 +153,7 @@ def get_certificate_chain(host, name=None, port=443, timeout=10, insecure=False,
     context.load_verify_locations(cafile=args.ca)
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(args.limit)
     s.connect((host, port))
 
     sock_host, sock_port = s.getpeername()
@@ -161,7 +164,7 @@ def get_certificate_chain(host, name=None, port=443, timeout=10, insecure=False,
         context, socket=s
     )
         
-    conn.settimeout(5)
+    # conn.settimeout(5)
     # conn.connect((host, port))
     conn.setblocking(1)
 
@@ -352,6 +355,10 @@ def process_cert(CERT, name=None, insecure=False, warn=False, starttls='auto'):
         print("{CERT} Certificate verification error (use -i): {exception}".format(CERT=CERT, exception=e),
             file=sys.stderr)
         return 1
+    except socket.timeout as e:
+        print("Timeout connecting to {}".format(CERT), file=sys.stderr)
+        return 1
+
 
     if not args.insecure:
         try:
