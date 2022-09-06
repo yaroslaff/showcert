@@ -22,7 +22,7 @@ from collections import namedtuple
 
 
 
-version = '0.1.6'
+version = '0.1.7'
 args = None
 
 phrase = namedtuple('Phrase', 'say wait expect')
@@ -152,6 +152,9 @@ def get_certificate_chain(host, name=None, port=443, timeout=10, insecure=False,
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((host, port))
+
+    sock_host, sock_port = s.getpeername()
+    
     start_tls(s, args.starttls, port)
 
     conn = SSL.Connection(
@@ -167,7 +170,8 @@ def get_certificate_chain(host, name=None, port=443, timeout=10, insecure=False,
     conn.set_connect_state()
     conn.do_handshake()
 
-    return conn.get_peer_cert_chain()
+    chain = conn.get_peer_cert_chain()
+    return sock_host, chain
 
 
 def is_local(cert):
@@ -311,7 +315,7 @@ def print_dnames(crt):
     print('-d', ' -d '.join(names))
 
 
-def print_cert(crt, location=None):
+def print_cert(crt, location=None, addr=None):
 
     def tlist2str(tlist):
         return ' '.join([ '{}={}'.format(t[0].decode(), t[1].decode()) for t in tlist ])
@@ -324,6 +328,7 @@ def print_cert(crt, location=None):
 
     names = get_names(crt)
 
+    print("IP:", addr)
     print("Names:", ' '.join(names))
     print("notBefore: {nbefore} ({days} days old)".format(nbefore=nbefore, days=daysold))
     print("notAfter: {nafter} ({days} days left)".format(nafter=nafter, days = daysleft))
@@ -334,13 +339,14 @@ def process_cert(CERT, name=None, insecure=False, warn=False, starttls='auto'):
     retcode = 0
     hostname = None
     out = args.output.lower()
+    sock_host = None
 
     try:
         if is_local(CERT):
             chain = get_local_certs(CERT)
         else:
             hostname = name or CERT.split(':')[0]
-            chain = get_remote_certs(location=CERT, name=name, insecure=insecure, starttls=starttls)
+            sock_host, chain = get_remote_certs(location=CERT, name=name, insecure=insecure, starttls=starttls)
     except SSL.Error as e:
         print("{CERT} Certificate verification error (use -i): {exception}".format(CERT=CERT, exception=e),
             file=sys.stderr)
@@ -378,7 +384,7 @@ def process_cert(CERT, name=None, insecure=False, warn=False, starttls='auto'):
         for i,_c in enumerate(chain):
             if i>0:
                 print()
-            print_cert(_c, location=CERT)
+            print_cert(_c, location=CERT, addr=sock_host)
 
     elif out == 'full':
         for i,_c in enumerate(chain):
