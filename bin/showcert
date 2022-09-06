@@ -315,7 +315,7 @@ def print_dnames(crt):
     print('-d', ' -d '.join(names))
 
 
-def print_cert(crt, location=None, addr=None):
+def print_cert(crt, addr=None):
 
     def tlist2str(tlist):
         return ' '.join([ '{}={}'.format(t[0].decode(), t[1].decode()) for t in tlist ])
@@ -328,7 +328,8 @@ def print_cert(crt, location=None, addr=None):
 
     names = get_names(crt)
 
-    print("IP:", addr)
+    if addr:
+        print("IP:", addr)
     print("Names:", ' '.join(names))
     print("notBefore: {nbefore} ({days} days old)".format(nbefore=nbefore, days=daysold))
     print("notAfter: {nafter} ({days} days left)".format(nafter=nafter, days = daysleft))
@@ -384,7 +385,7 @@ def process_cert(CERT, name=None, insecure=False, warn=False, starttls='auto'):
         for i,_c in enumerate(chain):
             if i>0:
                 print()
-            print_cert(_c, location=CERT, addr=sock_host)
+            print_cert(_c, addr=sock_host)
 
     elif out == 'full':
         for i,_c in enumerate(chain):
