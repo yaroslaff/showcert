@@ -22,7 +22,7 @@ from collections import namedtuple
 
 
 
-version = '0.1.9'
+version = '0.1.10'
 args = None
 
 phrase = namedtuple('Phrase', 'say wait expect')
@@ -357,6 +357,9 @@ def process_cert(CERT, name=None, insecure=False, warn=False, starttls='auto'):
         return 1
     except socket.timeout as e:
         print("Timeout connecting to {}".format(CERT), file=sys.stderr)
+        return 1
+    except socket.gaierror as e:
+        print("Error with {}: {}".format(CERT, e), file=sys.stderr)
         return 1
 
 
