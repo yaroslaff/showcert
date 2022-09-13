@@ -3,9 +3,10 @@ Simple CLI tool with clean output to show/verify local (.pem) and remote SSL cer
 
 ~~~
 $ showcert github.com
+IP: 140.82.121.3
 Names: github.com www.github.com
-notBefore: 2022-03-15 00:00:00 (108 days old)
-notAfter: 2023-03-15 23:59:59 (257 days left)
+notBefore: 2022-03-15 00:00:00 (182 days old)
+notAfter: 2023-03-15 23:59:59 (183 days left)
 Issuer: C=US O=DigiCert Inc CN=DigiCert TLS Hybrid ECC SHA384 2020 CA1
 ~~~
 
