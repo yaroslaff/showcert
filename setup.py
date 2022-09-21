@@ -28,7 +28,7 @@ setup(
     long_description_content_type='text/markdown',
     author_email='yaroslaff@gmail.com',
     description='dump local/remote certificate info',
-    python_requires='>=3',
+    python_requires='>=3.6',
     classifiers=[
         'Development Status :: 3 - Alpha',
 
