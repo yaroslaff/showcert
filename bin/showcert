@@ -22,7 +22,7 @@ from collections import namedtuple
 
 
 
-version = '0.1.11'
+version = '0.1.12'
 args = None
 
 phrase = namedtuple('Phrase', 'say wait expect')
@@ -367,7 +367,7 @@ def process_cert(CERT, name=None, insecure=False, warn=False, starttls='auto'):
         try:
             verify_chain(chain, hostname)
         except X509StoreContextError as e:
-            print("Verification error (use -i):", e.args[0][2])
+            print("Verification error (use -i):", e.args[0])
             return 1
         except InvalidCertificate as e:
             print("Verification error (use -i):", e)

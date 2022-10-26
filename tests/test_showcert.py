@@ -67,11 +67,4 @@ class TestShowcert():
             print(site)
             rc = subprocess.run([self.showcert, site])
             assert(rc.returncode == 0)
-
-
-
-    def teardown(self):
-        pass
-
-    def setup(self):
-        pass
+            
