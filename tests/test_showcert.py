@@ -44,6 +44,14 @@ class TestShowcert():
             rc = subprocess.run([self.showcert, site])        
             assert(rc.returncode == 1)
 
+    def test_badssl_ignore(self):
+        for site in self.badssl_sites:
+            print(site)
+            rc = subprocess.run([self.showcert, "-i", site])        
+            assert(rc.returncode == 0)
+
+
+
     def test_pop3(self):
         for site in self.pop3_sites:
             print(site)
