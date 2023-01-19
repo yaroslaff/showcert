@@ -22,7 +22,7 @@ from collections import namedtuple
 
 
 
-version = '0.1.13'
+version = '0.1.14'
 args = None
 
 phrase = namedtuple('Phrase', 'say wait expect')
@@ -190,6 +190,18 @@ def is_local(cert):
 def get_remote_certs(location, name=None, insecure=False, starttls='auto'):
     # parse CERT address
 
+    services = {
+        'http': 80,
+        'https': 443,
+        'pop3': 110,
+        'pop3s': 995,
+        'imap': 143,
+        'imap2': 143,
+        'imaps': 993,
+        'smtp': 25,
+        'submissions': 465
+    }
+
     if ':' in location:
         (host, port) = location.split(':')
     else:
@@ -198,16 +210,10 @@ def get_remote_certs(location, name=None, insecure=False, starttls='auto'):
     
     name = name or host
 
-    m = re.search('(?P<host>[^/:]+):?(?P<port>\d+)?', location)
-    if m is None:
-        print("Can not parse {}".format(location))
-        return
-    certhost = m.group('host')
-    certport = m.group('port') or '443'
-    certport = int(certport)
-
-    host = certhost
-    port = certport
+    try:
+        port = services[port]
+    except KeyError:
+        port = int(port)
 
     certlist = get_certificate_chain(host, name=name, port=port, insecure=insecure, starttls=starttls)
     
