@@ -5,7 +5,7 @@ Showcert tries to follow these principles:
 - Be simple and cover 9/10 routine certificate-related tasks.
 - If showcert missing some rarely used feature and user needs to use openssl for it - okay.
 
-~~~
+~~~bash
 # You will never forget how to use it:
 $ showcert github.com
 IP: 140.82.121.3
