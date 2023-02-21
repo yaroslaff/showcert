@@ -1,28 +1,37 @@
-# showcert
+# showcert - simple OpenSSL for humans
+
+Showcert tries to follow these principles:
+- Be simple and cover 9 or 10 certificate-related tasks.
+- If some rarely used feature is missing and user needs to use openssl for this - okay.
+- Simple things must be simple. More comples things may require some options. 
+
+
 Simple CLI tool with clean output to show/verify local (.pem) and remote SSL certificates. (For those, who can do this with openssl, but often have to search for right syntax or hate to write grep every time)
 
 ~~~
+# You will never forget how to use it:
 $ showcert github.com
 IP: 140.82.121.3
 Names: github.com www.github.com
 notBefore: 2022-03-15 00:00:00 (182 days old)
 notAfter: 2023-03-15 23:59:59 (183 days left)
 Issuer: C=US O=DigiCert Inc CN=DigiCert TLS Hybrid ECC SHA384 2020 CA1
-~~~
 
-Also:
-- `showcert /etc/ssl/certs/ssl-cert-snakeoil.pem` (show certificate from local file, or from stdin if path is `-`)
-- `showcert *.pem -w` - check all *.pem files in current directory, and warn if any expires soon. Add `-q` for quiet mode
-- `showcert pop.gmail.com:995` (show certificate for gmail POP3 over SSL)
-- `showcert pop.yandex.ru:110` (show cert for yandex POP3. Yes, it will do STARTTLS automatically)
-- `showcert -i -n google.com localhost` (show certificate for google.com on my local server, even if it's not valid)
-- `showcert google.com --chain -o pem > fullchain.pem` - 'steal' remote server fullchain.pem (without privkey, obviously)
+# Compare it against openssl:
+# two redirections, pipe, two invokations and 5 unneeded options
+$ openssl s_client -connect github.com:443 </dev/null 2>/dev/null | openssl x509 -inform pem -text
 
-LetsEncrypt specific features:
-- `showcert -w 10 :le` - same as `showcert -w 10 /etc/letsencrypt/live/*/fullchain.pem`. Warn if expire in less then 10 days. Non-zero exit if at least one certificate is expiring.
-- `showcert -o dnames example.com` - list all names from certificate (as `-o names`), but each name prepended with `-d`. e.g. `-d example.com -d www.example.com`. Useful to use with certbot to generate new certificate from existing cert or site. E.g.:
-~~~
-certbot certonly --webroot /var/www/PATH `showcert -o dnames example.com`
+# View Google SMTP server cert. starttls mode selected automatically. Same for POP3/IMAP and any simple TLS service
+$ showcert smtp.google.com:25
+
+# Save full chain of google.com certificates to local PEM file
+$ showcert --chain -o pem google.com > google-fullchain.pem
+
+# Warn about any LetsEncrypt cert which will expire in 50 days or less
+# :le is just special token, replaced to /etc/letsencrypt/live/*/fullchain.pem
+$ sudo showcert -q :le -w50 || echo panic
+/etc/letsencrypt/live/my.example.com/fullchain.pem expires in 47 days
+panic
 ~~~
 
 ## STARTTLS implementation
@@ -42,9 +51,9 @@ If `-w DAYS` used, non-zero (2) will be returned for valid certificates, which w
 ## Usage
 
 ~~~shell
-usage: showcert [-h] [-i] [--output OUTPUT] [-c] [-w [DAYS]] [-q] [-n NAME] [-t METHOD] [--ca CA] CERT [CERT ...]
+usage: showcert [-h] [-i] [--output OUTPUT] [-c] [-w [DAYS]] [-q] [-n NAME] [-t METHOD] [-l TIME] [--ca CA] CERT [CERT ...]
 
-Show local/remote SSL certificate info v0.1.4
+Show local/remote SSL certificate info v0.1.14
 
 positional arguments:
   CERT                  path, - (stdin), ":le" (letsencrypt cert path), hostname or hostname:port
@@ -63,5 +72,7 @@ Rarely needed options:
   -n NAME, --name NAME  name for SNI (if not same as CERT host)
   -t METHOD, --starttls METHOD
                         starttls method: auto (default, and OK almost always), no, imap, smtp, pop3
+  -l TIME, --limit TIME
+                        socket timeout (def: 5)
   --ca CA               path to trusted CA certificates, def: /usr/local/lib/python3.9/dist-packages/certifi/cacert.pem
 ~~~
