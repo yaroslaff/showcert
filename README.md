@@ -1,12 +1,9 @@
 # showcert - simple OpenSSL for humans
 
 Showcert tries to follow these principles:
-- Be simple and cover 9 or 10 certificate-related tasks.
-- If some rarely used feature is missing and user needs to use openssl for this - okay.
-- Simple things must be simple. More comples things may require some options. 
-
-
-Simple CLI tool with clean output to show/verify local (.pem) and remote SSL certificates. (For those, who can do this with openssl, but often have to search for right syntax or hate to write grep every time)
+- Simple things must be simple. More complex things may require some options. 
+- Be simple and cover 9/10 routine certificate-related tasks.
+- If showcert missing some rarely used feature and user needs to use openssl for it - okay.
 
 ~~~
 # You will never forget how to use it:
