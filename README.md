@@ -48,9 +48,12 @@ If `-w DAYS` used, non-zero (2) will be returned for valid certificates, which w
 ## Usage
 
 ~~~shell
-usage: showcert [-h] [-i] [--output OUTPUT] [-c] [-w [DAYS]] [-q] [-n NAME] [-t METHOD] [-l TIME] [--ca CA] CERT [CERT ...]
+$ bin/showcert -h
+usage: showcert [-h] [-i] [--output OUTPUT] [-c] [-w [DAYS]] [-q] [-n NAME] [-t METHOD] [-l TIME]
+                [--ca CA] [--net]
+                CERT [CERT ...]
 
-Show local/remote SSL certificate info v0.1.14
+Show local/remote SSL certificate info v0.1.15
 
 positional arguments:
   CERT                  path, - (stdin), ":le" (letsencrypt cert path), hostname or hostname:port
@@ -72,4 +75,19 @@ Rarely needed options:
   -l TIME, --limit TIME
                         socket timeout (def: 5)
   --ca CA               path to trusted CA certificates, def: /usr/local/lib/python3.9/dist-packages/certifi/cacert.pem
+  --net                 Force network check (if you want to check host and have file/dir with same name in current directory)
+
+Examples:  
+  # just check remote certificate
+  bin/showcert example.com
+
+  # check SMTP server certificate (autodetected: --starttls smtp )
+  bin/showcert smtp.google.com:25
+
+  # save fullchain from google SMTP to local PEM file
+  bin/showcert --chain -o pem google.com > google-fullchain.pem
+  
+  # look for expiring letsencrypt certificates 
+  # :le is alias for /etc/letsencrypt/live/*/fullchain.pem 
+  bin/showcert :le -q -w 20 || echo "expiring soon!"
 ~~~

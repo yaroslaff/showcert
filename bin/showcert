@@ -22,7 +22,7 @@ from collections import namedtuple
 
 
 
-version = '0.1.14'
+version = '0.1.15'
 args = None
 
 phrase = namedtuple('Phrase', 'say wait expect')
@@ -44,17 +44,16 @@ def get_args():
   # just check remote certificate
   {me} example.com
 
-  # check cert for example.com on new.example.com, do not verify
-  {me} new.example.com -n example.com -i
+  # check SMTP server certificate (autodetected: --starttls smtp )
+  {me} smtp.google.com:25
 
-  # dump info from local certificate file(s)
-  {me} *.pem
-
-  # look for expiring letsencrypt certificates (:le is alias for /etc/letsencrypt/live/*/fullchain.pem)
-  {me} :le -qw || echo "expiring soon!"
-
-  # 'steal' fullchain.pem from server:
-  {me} --chain -o pem google.com > fullchain.pem
+  # save fullchain from google SMTP to local PEM file
+  {me} --chain -o pem google.com > google-fullchain.pem
+  
+  # look for expiring letsencrypt certificates 
+  # :le is alias for /etc/letsencrypt/live/*/fullchain.pem 
+  {me} :le -q -w 20 || echo "expiring soon!"
+  
     """.format(me=sys.argv[0])
     parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info v{version}'.format(version=version),
     formatter_class=argparse.RawTextHelpFormatter, epilog=epilog)
@@ -70,6 +69,8 @@ def get_args():
     g.add_argument('-t', '--starttls', default='auto', metavar='METHOD', help='starttls method: auto (default, and OK almost always), no, imap, smtp, pop3')
     g.add_argument('-l', '--limit', default=def_limit, type=int, metavar='TIME', help='socket timeout (def: {})'.format(def_limit))
     g.add_argument('--ca', default=def_ca, help="path to trusted CA certificates, def: {}".format(def_ca))
+    g.add_argument('--net', default=False, action='store_true',
+                   help="Force network check (if you want to check host and have file/dir with same name in current directory)")
 
     return parser.parse_args()
 
@@ -180,9 +181,12 @@ def get_certificate_chain(host, name=None, port=443, timeout=10, insecure=False,
     return sock_host, chain
 
 
-def is_local(cert):
+def is_local(cert, net):
     """ guesses is cert is local file or not """
-    if os.path.exists(cert) or cert == '-':
+    if net:
+        return False
+
+    if os.path.exists(cert) and os.path.isfile(cert) or cert == '-':
         return True
     return False
 
@@ -252,7 +256,6 @@ def verify_chain(chain, hostname=None):
             pass
 
     
-
     store_ctx = X509StoreContext(store, chain[0])
     store_ctx.verify_certificate()
 
@@ -355,8 +358,11 @@ def process_cert(CERT, name=None, insecure=False, warn=False, starttls='auto'):
     sock_host = None
 
     try:
-        if is_local(CERT):
+        if is_local(CERT, args.net):
             chain = get_local_certs(CERT)
+            if not chain:
+                raise InvalidCertificate('Can not load certificate from file '+ CERT + '\nUse option --net if you want to check host ' + CERT)
+
         else:
             hostname = name or CERT.split(':')[0]
             sock_host, chain = get_remote_certs(location=CERT, name=name, insecure=insecure, starttls=starttls)
@@ -452,6 +458,7 @@ def main():
             maxrc = max(maxrc, rc)
         except CertException as e:
             print("{}: {}".format(cert, e))
+            maxrc=1
     sys.exit(maxrc)
 
 
