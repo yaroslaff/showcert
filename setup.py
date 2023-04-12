@@ -19,7 +19,7 @@ setup(
     packages=[],
     scripts=['bin/showcert'],
 
-    install_requires=['pyOpenSSL>=22.0.0', 'pem'],
+    install_requires=['pyOpenSSL>=22.0.0', 'pem', 'certifi'],
 
     url='https://github.com/yaroslaff/showcert',
     license='MIT',
