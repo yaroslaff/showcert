@@ -1,5 +1,13 @@
 # showcert - simple OpenSSL for humans
 
+micro-cheatsheet (only most ofen used commands):
+~~~
+showcert github.com
+showcert smtp.google.com:25
+showcert --chain -o pem google.com > google-fullchain.pem
+sudo showcert -q :le -w50 || echo panic
+~~~
+
 Showcert tries to follow these principles:
 - Simple things must be simple. More complex things may require some options. 
 - Be simple and cover 9/10 routine certificate-related tasks.
