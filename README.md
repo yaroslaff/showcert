@@ -1,11 +1,11 @@
 # showcert - simple OpenSSL for humans
 
-micro-cheatsheet (only most ofen used commands):
+micro-cheatsheet (only most often used commands):
 ~~~
 showcert github.com
 showcert smtp.google.com:25
 showcert --chain -o pem google.com > google-fullchain.pem
-sudo showcert -q :le -w50 || echo panic
+sudo showcert -q :le -w50 || echo local LetsEncrypt certificates will expire in less then 50 days
 ~~~
 
 Showcert tries to follow these principles:
