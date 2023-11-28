@@ -23,7 +23,7 @@ from collections import namedtuple
 #import importlib.metadata
 #version = importlib.metadata.version("showcert")
 
-__version__ = '0.1.17'
+__version__ = '0.1.18'
 
 
 args = None
@@ -58,7 +58,7 @@ def get_args():
   {me} :le -q -w 20 || echo "expiring soon!"
   
     """.format(me=sys.argv[0])
-    parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info v{__version__}'.format(version=version),
+    parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info ver {version}'.format(version=__version__),
     formatter_class=argparse.RawTextHelpFormatter, epilog=epilog)
     parser.add_argument('CERT', nargs='+', help='path, - (stdin), ":le" (letsencrypt cert path), hostname or hostname:port')
     parser.add_argument('-i', '--insecure', default=False, action='store_true', help='Do not verify remote certificate')
