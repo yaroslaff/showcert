@@ -1,15 +1,41 @@
 [build-system]
-requires = ["setuptools >= 40.6.0", "wheel"]
-build-backend = "setuptools.build_meta"
+# requires = ["setuptools >= 40.6.0", "wheel"]
+requires = ["hatchling", "wheel"]
+
+# build-backend = "setuptools.build_meta"
+build-backend = "hatchling.build"
 
 [project]
 name="showcert"
-version="0.1.17"
+dynamic = [ "version" ]
+
+# how version managed by hatch
+# version="0.1.17"
+
 dependencies = [
     'pyopenssl',
     'pem',
     'certifi'
 ]
+authors = [
+  { name="Yaroslav Polyakov", email="yaroslaff@gmail.com" },
+]
+description = "Simple OpenSSL for humans: fetch/validate/show/save SSL certificates and warn about soon expiration"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/yaroslaff/showcert"
+Issues = "https://github.com/yaroslaff/showcert/issues"
+
 
 [project.scripts]
 showcert = "showcert:main"
+
+[tool.hatch.version]
+path = 'showcert/__main__.py'

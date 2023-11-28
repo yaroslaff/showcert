@@ -44,7 +44,11 @@ showcert has built-in support for STARTTLS for SMTP (port 25), POP3 (port 110) a
 
 
 ## Installation
-As any usual python package:
+`pipx install showcert`
+
+Or right from repo: `pipx install git+https://github.com/yaroslaff/showcert` 
+
+Or use old way via pip/pip3:
 - `pip3 install showcert` (just install)
 - `pip3 install -U showcert` (upgrade)
 - `pip3 install -U git+https://github.com/yaroslaff/showcert` (install/upgrade from git)
