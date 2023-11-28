@@ -22,7 +22,7 @@ from collections import namedtuple
 
 
 
-version = '0.1.16'
+version = '0.1.17'
 args = None
 
 phrase = namedtuple('Phrase', 'say wait expect')
@@ -233,7 +233,7 @@ def get_local_certs(CERT, insecure=False):
 
     # raw_ca = open(args.ca).read().rstrip().encode()
 
-    return [ load_certificate(FILETYPE_PEM, str(_c)) for _c in pem.parse(rawcert) ]
+    return [ load_certificate(FILETYPE_PEM, str(_c)) for _c in pem.parse(rawcert) if _c.__class__.__name__ == 'Certificate' ]
 
 def verify_chain(chain, hostname=None):
 
