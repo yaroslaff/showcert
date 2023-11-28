@@ -20,9 +20,12 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from collections import namedtuple
 
+import importlib.metadata
 
+# version = '0.1.17'
 
-version = '0.1.17'
+version = importlib.metadata.version("showcert")
+
 args = None
 
 phrase = namedtuple('Phrase', 'say wait expect')

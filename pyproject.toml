@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools >= 40.6.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name="showcert"
+version="0.1.17"
+dependencies = [
+    'pyopenssl',
+    'pem',
+    'certifi'
+]
+
+[project.scripts]
+showcert = "showcert:main"
