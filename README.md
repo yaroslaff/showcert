@@ -1,6 +1,6 @@
 # showcert - simple OpenSSL for humans
 
-showcert is consist of two CLI utilities. showcert - all 'read' operations with X.509 certificates and gencert - to create it.
+showcert is consist of two CLI utilities. `showcert`: all 'read' operations with X.509 certificates and `gencert`: to create it.
 
 We tries to follow these principles:
 - Simple things must be simple. More complex things may require some options. 
