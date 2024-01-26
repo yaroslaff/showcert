@@ -103,26 +103,34 @@ Gencert is simple tool to quickly generate X.509 certificates **for development 
 I am not sure if they are very secure. Do not use it in real production!
 
 ### Generate self-signed cert
-~~~
+~~~shell
 gencert example.com www.example.com
 ~~~
 This will make `example.com.pem` file with both certificate and key in one file. Add `--key example.com.key` to store key in separate file. Add `--cert mycert.pem` to store certificate in different file name.
 
 ### Your own CA in two simple commands
 Generate CA cert/key:
-~~~
+~~~shell
 gencert --ca "MyCA"
 ~~~
 This will make MyCA.pem. Use `--cert` and `--key` to save to other files.
 
 Generate signed certificate (same as self-signed, but with `--cacert`):
-~~~
+~~~shell
 gencert --cacert MyCA.pem --cakey MyCA.pem example.com
 ~~~
 Done!
 
 You may verify certificate with openssl:
-~~~
+~~~shell
+# verify with showcert (unless '-i' given, showcert expects a valid certificate)
+$ showcert --ca MyCA.pem example.com.pem
+Names: example.com
+notBefore: 2024-01-26 11:30:24 (0 days old)
+notAfter: 2025-01-25 11:30:24 (364 days left)
+Issuer: CN=MyCA
+
+# verify with openssl
 $ openssl verify -CAfile MyCA.pem example.com.pem 
 example.com.pem: OK
 ~~~

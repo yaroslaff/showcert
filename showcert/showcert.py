@@ -9,7 +9,7 @@ import ssl
 import socket
 # import OpenSSL
 from OpenSSL.crypto import FILETYPE_PEM, FILETYPE_TEXT, load_certificate, \
-    dump_certificate, X509Store, X509StoreContext, \
+    dump_certificate, X509, X509Store, X509StoreContext, \
     X509StoreContextError
 from OpenSSL import SSL
 import pem
@@ -149,6 +149,14 @@ def start_tls(s, method, port):
 
     return method_map[method](s)
 
+def convert_openssl_to_cryptography(openssl_cert: X509) -> x509.Certificate:
+    # Convert OpenSSL.crypto.X509 to PEM format
+    pem_data = dump_certificate(FILETYPE_PEM, openssl_cert)
+
+    # Load PEM data into cryptography.x509.Certificate
+    certificate = x509.load_pem_x509_certificate(pem_data, default_backend())
+
+    return certificate
 
 
 def get_certificate_chain(host, name=None, port=443, timeout=10, insecure=False, starttls='auto'):
@@ -227,6 +235,8 @@ def get_remote_certs(location, name=None, insecure=False, starttls='auto'):
 
     certlist = get_certificate_chain(host, name=name, port=port, insecure=insecure, starttls=starttls)
     
+    print(certlist[1])
+
     # cert = load_certificate(FILETYPE_PEM, certificate)
     return certlist
 
@@ -249,7 +259,8 @@ def verify_chain(chain, hostname=None):
     raw_ca = open(args.ca).read().rstrip().encode()
 
     for _ca in pem.parse(raw_ca):
-        store.add_cert(load_certificate(FILETYPE_PEM, str(_ca)))
+        if isinstance(_ca, pem._object_types.Certificate):
+            store.add_cert(load_certificate(FILETYPE_PEM, str(_ca)))
 
     # verify and add each intermediate cert
     for _i in reversed(chain[1:]):
@@ -322,6 +333,20 @@ def get_names(crt):
     return names
 
 
+def is_self_signed(crt: x509.Certificate):
+    return crt.issuer == crt.subject
+
+def is_CA(crt: x509.Certificate):
+    # Get the extensions from the certificate
+    extensions = crt.extensions
+
+    # Look for the BasicConstraints extension
+    basic_constraints = next((ext.value for ext in extensions if isinstance(ext.value, x509.BasicConstraints)), None)
+
+    # If BasicConstraints is not present, or if it is present and CA is set to True, it is a CA certificate
+    return basic_constraints is None or basic_constraints.ca
+
+
 def print_full_cert(crt):
     print(dump_certificate(FILETYPE_TEXT, crt).decode())
 
@@ -330,16 +355,29 @@ def print_names(crt):
 
     print(' '.join(names))
 
-
 def print_dnames(crt):
     names = get_names(crt)
     print('-d', ' -d '.join(names))
 
 
-def print_cert(crt: x509, addr=None):
+def print_cert(crt: X509, addr=None, verified=False):
 
     def tlist2str(tlist):
         return ' '.join([ '{}={}'.format(t[0].decode(), t[1].decode()) for t in tlist ])
+
+
+    tags = list()
+
+    crypto_crt = convert_openssl_to_cryptography(crt)
+
+    if is_self_signed(crypto_crt):
+        tags.append('[SELF-SIGNED]')
+
+    if is_CA(crypto_crt):
+        tags.append('[CA]')
+    
+    if verified:
+        tags.append('[CHAIN-VERIFIED]')
 
     nbefore = datetime.strptime(crt.get_notBefore().decode(), '%Y%m%d%H%M%SZ')
     nafter = datetime.strptime(crt.get_notAfter().decode(), '%Y%m%d%H%M%SZ')
@@ -355,6 +393,8 @@ def print_cert(crt: x509, addr=None):
     print("notBefore: {nbefore} ({days} days old)".format(nbefore=nbefore, days=daysold))
     print("notAfter: {nafter} ({days} days left)".format(nafter=nafter, days = daysleft))
     print("Issuer:", issuer)
+    if tags:
+        print("Tags:", ' '.join(tags))
 
 def process_cert(CERT, name=None, insecure=False, warn=False, starttls='auto'):
 
@@ -362,6 +402,7 @@ def process_cert(CERT, name=None, insecure=False, warn=False, starttls='auto'):
     hostname = None
     out = args.output.lower()
     sock_host = None
+    verified = None
 
     try:
         if is_local(CERT, args.net):
@@ -387,6 +428,7 @@ def process_cert(CERT, name=None, insecure=False, warn=False, starttls='auto'):
     if not args.insecure:
         try:
             verify_chain(chain, hostname)
+            verified = True
         except X509StoreContextError as e:
             print("Verification error (use -i):", e.args[0])
             return 1
@@ -416,7 +458,7 @@ def process_cert(CERT, name=None, insecure=False, warn=False, starttls='auto'):
         for i,_c in enumerate(chain):
             if i>0:
                 print()
-            print_cert(_c, addr=sock_host)
+            print_cert(_c, addr=sock_host, verified=verified)
 
     elif out == 'full':
         for i,_c in enumerate(chain):
