@@ -35,8 +35,9 @@ Issues = "https://github.com/yaroslaff/showcert/issues"
 
 
 [project.scripts]
-showcert = "showcert:main"
+showcert = "showcert.showcert:main"
 gencert = "showcert.gencert:main"
 
 [tool.hatch.version]
-path = 'showcert/__main__.py'
+# path = 'showcert:showcert/__main__.py'
+path = 'showcert/__init__.py'

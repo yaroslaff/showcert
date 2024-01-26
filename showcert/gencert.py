@@ -3,8 +3,7 @@
 import argparse
 import ipaddress
 import datetime
-import uuid
-from pathlib import Path
+
 
 from cryptography import x509
 from cryptography.x509.oid import NameOID
@@ -14,29 +13,34 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 
+
+from . import __version__
+
+
 # Gists:
 # Create a self-signed x509 certificate with python cryptography library
 #     https://gist.github.com/bloodearnest/9017111a313777b9cce5
 # Making a certificate authority (CA) with python cryptography
 #     https://gist.github.com/major/8ac9f98ae8b07f46b208
+#
+# https://github.com/ikreymer/certauth/blob/master/certauth/certauth.py
 
 
-def generate_selfsigned_cert(hostnames: list[str], ip_addresses: list[str] = None, 
-                             key=None, days=None, bits=None, ca=False):
+def generate_cert(hostnames: list[str], ip_addresses: list[str] = None, 
+                             cakey=None, cacert=None, days=None, bits=None, ca=False):
     """Generates self signed certificate for a hostname, and optional IP addresses."""
     
     # Generate our key
-    if key is None:
-        key = rsa.generate_private_key(
-            public_exponent=65537,
-            key_size=bits,
-            backend=default_backend(),
-        )
+    certkey = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=bits,
+        backend=default_backend(),
+    )
     
     name = x509.Name([
         x509.NameAttribute(NameOID.COMMON_NAME, hostnames[0])
     ])
- 
+
     # best practice seem to be to include the hostname in the SAN, which *SHOULD* mean COMMON_NAME is ignored.    
     alt_names = [x509.DNSName(h) for h in hostnames]
     
@@ -52,44 +56,55 @@ def generate_selfsigned_cert(hostnames: list[str], ip_addresses: list[str] = Non
     san = x509.SubjectAlternativeName(alt_names)
     
     # path_len=0 means this cert can only sign itself, not other certs.
-    basic_contraints = x509.BasicConstraints(ca=True, path_length=0)
+    
     now = datetime.datetime.utcnow()
 
 
-    cert = (
-        x509.CertificateBuilder()
-        .subject_name(name)
-        .issuer_name(name)
-        .public_key(key.public_key())
-        .serial_number(1000)
-        .not_valid_before(now)
-        .not_valid_after(now + datetime.timedelta(days=10*365))
-        .add_extension(basic_contraints, False)
-        .add_extension(san, False)
-        .sign(key, hashes.SHA256(), default_backend())
-    )
-    print("cert:", cert)
-    print(type(cert))
 
 
 
     builder = x509.CertificateBuilder() \
         .subject_name(name) \
-        .issuer_name(name) \
-        .public_key(key.public_key()) \
-        .serial_number(int(uuid.uuid4())) \
+        .public_key(certkey.public_key()) \
+        .serial_number(x509.random_serial_number()) \
         .not_valid_before(now) \
         .not_valid_after(now + datetime.timedelta(days=days)) \
-        .add_extension(basic_contraints, False) \
-        .add_extension(san, False) \
-        .sign(key, hashes.SHA256())
-    
-    cert = (
-        builder, default_backend())
+
+    if ca:
+        print("Generate CA certificate")
+        basic_contraints = x509.BasicConstraints(ca=True, path_length=None)
+        builder = builder.add_extension(basic_contraints, True)
+
+#                    crypto.X509Extension(b"basicConstraints",
+#                                 True,
+#                                b"CA:TRUE, pathlen:0"),
+
+    else:
+        basic_contraints = x509.BasicConstraints(ca=True, path_length=0)
+        builder = builder.add_extension(basic_contraints, False) \
+            .add_extension(san, False)
+
+    # Issuer
+    if cacert and cakey:
+        builder = builder.issuer_name(cacert.issuer)
+    else:
+        builder = builder.issuer_name(name)
+
+    # SIGN
+    if cakey:
+        # sign with CA private key
+        cert = builder.sign(private_key=cakey, 
+            algorithm=hashes.SHA256(), 
+            backend=default_backend())
+    else:
+        # self-sign
+        cert = builder.sign(private_key=certkey, 
+            algorithm=hashes.SHA256(), 
+            backend=default_backend())
     
 
     cert_pem = cert.public_bytes(encoding=serialization.Encoding.PEM)
-    key_pem = key.private_bytes(
+    key_pem = certkey.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption(),
@@ -102,24 +117,32 @@ def get_args():
     def_days = 365
     def_bits = 2048
 
-    epilog = '''
+    epilog = '''    
 Examples:\n
 
-# make self-signed cert and key in one file example.com.pem  
+# make simple self-signed cert and key in one file example.com.pem  
 gencert example.com www.example.com 
+
+
+# Your own CA:
+# make CA cert and key
+gencert --ca  --cert ca.pem --key ca-priv.pem "My CA"
+
+# make host cert and sign CA cert
+gencert --cacert ca.pem --cakey ca-priv.pem example.com www.example.com
 '''
 
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('--cert', help='certificate file (will be created if missing)')
-    parser.add_argument('--key', help='private key file (will be created if missing)')
+    parser = argparse.ArgumentParser(
+        description=f"gencert version {__version__}",
+        formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('--cert', help='save new certificate to this file')
+    parser.add_argument('--key', help='save private key to this file (optional)')
     parser.add_argument('hostnames', metavar='HOST', nargs='+', help='Hostnames and/or IP addresses')
 
     g = parser.add_argument_group('CA operations')
     g.add_argument('--ca', default=False, action='store_true', help='Generate --cert/--key for CA, not usual cert')
-
-
-    g = parser.add_argument_group('Certificate attributes')
-    g.add_argument('-a', nargs='+', metavar=('ATTRIBUTE=VALUE'), help='Attribute: OU/O/L/S/C')
+    g.add_argument('--cakey', metavar='ca.crt', help='read CA key to sign new cert (optional)')
+    g.add_argument('--cacert', metavar='file.pem', help='read CA cert to sign new cert (optional)')
 
     g = parser.add_argument_group('Options')
     g.add_argument('-d', '--days', type=int, metavar='DAYS', default=def_days,
@@ -134,22 +157,37 @@ gencert example.com www.example.com
 
 def main():
     args = get_args()
-    cert, key = generate_selfsigned_cert(hostnames = args.hostnames, 
-                                         days=args.days, bits=args.bits)
+    ca_privkey = None
+    ca_cert = None
 
-    if args.certificate is None:
-        args.certificate = args.hostnames[0] + '.pem'
-
-    if args.key and Path(args.key).exists():
-        print("load key from", args.key)
+    if args.cert is None:
+        args.cert = args.hostnames[0] + '.pem'
 
 
-    with open(args.certificate, "wb") as fh:
+    if args.cakey:
+        with open(args.cakey, 'rb') as fh:
+            # ca_privkey = rsa.PrivateKey.load_pkcs1(fh.read())
+            ca_privkey = serialization.load_pem_private_key(fh.read(), password=None)
+
+
+    if args.cacert:
+        with open(args.cacert, 'rb') as fh:
+            ca_cert = x509.load_pem_x509_certificate(fh.read(), default_backend())
+
+
+    cert, key = generate_cert(hostnames = args.hostnames, 
+                                         days=args.days, bits=args.bits,
+                                         cakey=ca_privkey, cacert=ca_cert,
+                                         ca=args.ca)
+
+
+
+    with open(args.cert, "wb") as fh:
         fh.write(cert)
         if args.key is None:
             fh.write(key)
     
-    if args.key and args.key != args.certificate:
+    if args.key and args.key != args.cert:
         # different key file
         with open(args.key, "wb") as fh:
             fh.write(key)

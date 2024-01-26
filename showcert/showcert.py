@@ -20,10 +20,11 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from collections import namedtuple
 
+from . import __version__
+
 #import importlib.metadata
 #version = importlib.metadata.version("showcert")
 
-__version__ = '0.1.18'
 
 
 args = None
@@ -57,7 +58,9 @@ def get_args():
   # :le is alias for /etc/letsencrypt/live/*/fullchain.pem 
   {me} :le -q -w 20 || echo "expiring soon!"
   
-    """.format(me=sys.argv[0])
+    """.format(me='showcert')
+
+
     parser = argparse.ArgumentParser(description='Show local/remote SSL certificate info ver {version}'.format(version=__version__),
     formatter_class=argparse.RawTextHelpFormatter, epilog=epilog)
     parser.add_argument('CERT', nargs='+', help='path, - (stdin), ":le" (letsencrypt cert path), hostname or hostname:port')
@@ -333,7 +336,7 @@ def print_dnames(crt):
     print('-d', ' -d '.join(names))
 
 
-def print_cert(crt, addr=None):
+def print_cert(crt: x509, addr=None):
 
     def tlist2str(tlist):
         return ' '.join([ '{}={}'.format(t[0].decode(), t[1].decode()) for t in tlist ])

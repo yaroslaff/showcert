@@ -1,5 +1,15 @@
 # showcert - simple OpenSSL for humans
 
+showcert is consist of two CLI utilities. showcert - all 'read' operations with X.509 certificates and gencert - to create it.
+
+We tries to follow these principles:
+- Simple things must be simple. More complex things may require some options. 
+- Be simple and cover 9/10 routine certificate-related tasks.
+- If showcert missing some rarely used feature and user needs to use openssl for it - okay.
+
+
+
+## showcert
 micro-cheatsheet (only most often used commands):
 ~~~
 showcert github.com
@@ -7,11 +17,6 @@ showcert smtp.google.com:25
 showcert --chain -o pem google.com > google-fullchain.pem
 sudo showcert -q :le -w50 || echo local LetsEncrypt certificates will expire in less then 50 days
 ~~~
-
-Showcert tries to follow these principles:
-- Simple things must be simple. More complex things may require some options. 
-- Be simple and cover 9/10 routine certificate-related tasks.
-- If showcert missing some rarely used feature and user needs to use openssl for it - okay.
 
 ~~~bash
 # You will never forget how to use it:
@@ -41,17 +46,6 @@ panic
 
 ## STARTTLS implementation
 showcert has built-in support for STARTTLS for SMTP (port 25), POP3 (port 110) and IMAP (port 143). You can select proper method with `--starttls` option (or disable it with `--starttls no`), but default value (`auto`) is OK for most cases. This option is needed only if you test servers on non-standard ports.
-
-
-## Installation
-`pipx install showcert`
-
-Or right from repo: `pipx install git+https://github.com/yaroslaff/showcert` 
-
-Or use old way via pip/pip3:
-- `pip3 install showcert` (just install)
-- `pip3 install -U showcert` (upgrade)
-- `pip3 install -U git+https://github.com/yaroslaff/showcert` (install/upgrade from git)
 
 ## Exit code
 showcert will return non-zero exit code (1) in case of any error (including expired certificate or host mismatch).
@@ -103,3 +97,42 @@ Examples:
   # :le is alias for /etc/letsencrypt/live/*/fullchain.pem 
   bin/showcert :le -q -w 20 || echo "expiring soon!"
 ~~~
+
+## gencert
+Gencert is simple tool to quickly generate X.509 certificates **for development purposes**.
+I am not sure if they are very secure. Do not use it in real production!
+
+### Generate self-signed cert
+~~~
+gencert example.com www.example.com
+~~~
+This will make `example.com.pem` file with both certificate and key in one file. Add `--key example.com.key` to store key in separate file. Add `--cert mycert.pem` to store certificate in different file name.
+
+### Your own CA in two simple commands
+Generate CA cert/key:
+~~~
+gencert --ca "MyCA"
+~~~
+This will make MyCA.pem. Use `--cert` and `--key` to save to other files.
+
+Generate signed certificate (same as self-signed, but with --cacert):
+~~~
+gencert --cacert MyCA.pem --cakey MyCA.pem example.com
+~~~
+Done!
+
+You may verify certificate with openssl:
+~~~
+$ openssl verify -CAfile MyCA.pem example.com.pem 
+example.com.pem: OK
+~~~
+
+## Installation
+`pipx install showcert`
+
+Or right from repo: `pipx install git+https://github.com/yaroslaff/showcert` 
+
+Or use old way via pip/pip3:
+- `pip3 install showcert` (just install)
+- `pip3 install -U showcert` (upgrade)
+- `pip3 install -U git+https://github.com/yaroslaff/showcert` (install/upgrade from git)
