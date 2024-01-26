@@ -115,7 +115,7 @@ gencert --ca "MyCA"
 ~~~
 This will make MyCA.pem. Use `--cert` and `--key` to save to other files.
 
-Generate signed certificate (same as self-signed, but with --cacert):
+Generate signed certificate (same as self-signed, but with `--cacert`):
 ~~~
 gencert --cacert MyCA.pem --cakey MyCA.pem example.com
 ~~~
