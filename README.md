@@ -44,14 +44,14 @@ $ sudo showcert -q :le -w50 || echo panic
 panic
 ~~~
 
-## STARTTLS implementation
+### STARTTLS implementation
 showcert has built-in support for STARTTLS for SMTP (port 25), POP3 (port 110) and IMAP (port 143). You can select proper method with `--starttls` option (or disable it with `--starttls no`), but default value (`auto`) is OK for most cases. This option is needed only if you test servers on non-standard ports.
 
-## Exit code
+### Exit code
 showcert will return non-zero exit code (1) in case of any error (including expired certificate or host mismatch).
 If `-w DAYS` used, non-zero (2) will be returned for valid certificates, which will expire in `DAYS` days or sooner.
 
-## Usage
+### Usage
 
 ~~~shell
 $ bin/showcert -h
