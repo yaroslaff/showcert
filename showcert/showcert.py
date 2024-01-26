@@ -235,8 +235,6 @@ def get_remote_certs(location, name=None, insecure=False, starttls='auto'):
 
     certlist = get_certificate_chain(host, name=name, port=port, insecure=insecure, starttls=starttls)
     
-    print(certlist[1])
-
     # cert = load_certificate(FILETYPE_PEM, certificate)
     return certlist
 
