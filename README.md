@@ -111,7 +111,7 @@ This will make `example.com.pem` file with both certificate and key in one file.
 ### Your own CA in two simple commands
 Generate CA cert/key:
 ~~~shell
-gencert --ca "MyCA" --key MyCA.key
+gencert --ca MyCA --key MyCA.key
 ~~~
 This will make MyCA.pem. Use `--cert` to save to other filename. `--key` is optional, but almost required because you will need to install this certificate to browsers.
 
