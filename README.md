@@ -121,7 +121,7 @@ gencert --cacert MyCA.pem --cakey MyCA.key example.com
 ~~~
 Done!
 
-You may verify certificate with openssl:
+You may verify certificate with showcert and openssl:
 ~~~shell
 # verify with showcert (unless '-i' given, showcert expects a valid certificate)
 $ showcert --ca MyCA.pem example.com.pem
