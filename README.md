@@ -8,7 +8,6 @@ showcert tries to follow these principles:
 - If showcert missing some rarely used feature and user needs to use openssl for it - okay.
 
 
-
 ## showcert
 micro-cheatsheet (only most often used commands):
 ~~~
@@ -111,14 +110,19 @@ This will make `example.com.pem` file with both certificate and key in one file.
 ### Your own CA in two simple commands
 Generate CA cert/key:
 ~~~shell
-gencert --ca MyCA --key MyCA.key
+gencert --ca "My own CA"
 ~~~
-This will make MyCA.pem. Use `--cert` to save to other filename. `--key` is optional, but almost required because you will need to install this certificate to browsers.
+This will make My-own-CA.pem and private key My-own-CA.key (Override with `--cert` and `--key`).
 
-Generate signed certificate (same as self-signed, but with `--cacert`):
+Generate signed certificate:
 ~~~shell
-gencert --cacert MyCA.pem --cakey MyCA.key example.com
+gencert --cacert My-own-CA.pem example.com
 ~~~
+`--cacert` is required, `--cakey` is optional (omitted in example), gencert will look for CA private key in following order:
+- `--cakey` PEM file (if given)
+- same file as CA certificate (`--cacert`) 
+- guessed filename. If `--cacert` is CA.pem, gencert will try to load from CA.key.
+
 Done!
 
 You may verify certificate with showcert and openssl:

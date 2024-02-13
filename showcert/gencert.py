@@ -3,7 +3,9 @@
 import argparse
 import ipaddress
 import datetime
+import os
 
+from typing import List
 
 from cryptography import x509
 from cryptography.x509.oid import NameOID
@@ -155,24 +157,57 @@ gencert --cacert ca.pem --cakey ca-priv.pem example.com www.example.com
 
     return parser.parse_args()
 
+def good_filename(path):
+    return path.replace(' ','-')
+
+
+def change_extension(filename, new_extension):
+    base_name, _ = os.path.splitext(filename)
+    return base_name + new_extension
+
+def load_privkey(files: List[str]):
+    for file in files:
+        if file is None:
+            continue
+        with open(file, 'rb') as fh:
+            try:
+                privkey = serialization.load_pem_private_key(fh.read(), password=None)
+                # print(f"Loaded privkey from {file}")
+                return privkey
+            except ValueError:
+                pass
+
 def main():
     args = get_args()
     ca_privkey = None
     ca_cert = None
 
-    if args.cert is None:
-        args.cert = args.hostnames[0] + '.pem'
+    certfile = args.cert
+    keyfile = args.key
 
-
-    if args.cakey:
-        with open(args.cakey, 'rb') as fh:
-            # ca_privkey = rsa.PrivateKey.load_pkcs1(fh.read())
-            ca_privkey = serialization.load_pem_private_key(fh.read(), password=None)
-
+    if certfile is None:
+        certfile = good_filename(args.hostnames[0] + '.pem')
+    
+    if not keyfile:
+        if args.ca:
+            # we generate CA certs, key is in different file
+            keyfile = change_extension(certfile, '.key')
+        else:
+            keyfile = certfile
 
     if args.cacert:
         with open(args.cacert, 'rb') as fh:
             ca_cert = x509.load_pem_x509_certificate(fh.read(), default_backend())
+
+
+    if args.cacert:
+        ca_privkey = load_privkey([args.cakey, args.cacert, change_extension(args.cacert, '.key')])
+
+    #if args.cakey:
+    #    with open(args.cakey, 'rb') as fh:
+            # ca_privkey = rsa.PrivateKey.load_pkcs1(fh.read())
+    #        ca_privkey = serialization.load_pem_private_key(fh.read(), password=None)
+
 
 
     cert, key = generate_cert(hostnames = args.hostnames, 
@@ -181,15 +216,14 @@ def main():
                                          ca=args.ca)
 
 
-
-    with open(args.cert, "wb") as fh:
+    with open(certfile, "wb") as fh:
         fh.write(cert)
-        if args.key is None:
+        if keyfile == certfile:
             fh.write(key)
     
-    if args.key and args.key != args.cert:
+    if keyfile != certfile:
         # different key file
-        with open(args.key, "wb") as fh:
+        with open(keyfile, "wb") as fh:
             fh.write(key)
 
 if __name__ == '__main__':
