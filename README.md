@@ -118,12 +118,13 @@ Generate signed certificate:
 ~~~shell
 gencert --cacert My-own-CA.pem example.com
 ~~~
+Done!
+
 `--cacert` is required, `--cakey` is optional (omitted in example), gencert will look for CA private key in following order:
-- `--cakey` PEM file (if given)
-- same file as CA certificate (`--cacert`) 
+- in`--cakey` PEM file (if given)
+- in `--cacert` PEM file (if will be found there). 
 - guessed filename. If `--cacert` is CA.pem, gencert will try to load from CA.key.
 
-Done!
 
 You may verify certificate with showcert and openssl:
 ~~~shell
