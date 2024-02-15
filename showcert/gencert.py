@@ -74,16 +74,16 @@ def generate_cert(hostnames: list[str], ip_addresses: list[str] = None,
 
     if ca:
         print("Generate CA certificate")
-        basic_contraints = x509.BasicConstraints(ca=True, path_length=None)
-        builder = builder.add_extension(basic_contraints, True)
+        basic_constraints = x509.BasicConstraints(ca=True, path_length=None)
+        builder = builder.add_extension(basic_constraints, True)
 
 #                    crypto.X509Extension(b"basicConstraints",
 #                                 True,
 #                                b"CA:TRUE, pathlen:0"),
 
     else:
-        basic_contraints = x509.BasicConstraints(ca=True, path_length=0)
-        builder = builder.add_extension(basic_contraints, False) \
+        basic_constraints = x509.BasicConstraints(ca=True, path_length=0)
+        builder = builder.add_extension(basic_constraints, False) \
             .add_extension(san, False)
 
     # Issuer
