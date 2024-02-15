@@ -28,7 +28,7 @@ notAfter: 2023-03-15 23:59:59 (183 days left)
 Issuer: C=US O=DigiCert Inc CN=DigiCert TLS Hybrid ECC SHA384 2020 CA1
 
 # Compare it against openssl:
-# two redirections, pipe, two invokations and 5 unneeded options
+# two redirections, pipe, two invocations and 5 unneeded options
 $ openssl s_client -connect github.com:443 </dev/null 2>/dev/null | openssl x509 -inform pem -text
 
 # View Google SMTP server cert. starttls mode selected automatically. Same for POP3/IMAP and any simple TLS service
