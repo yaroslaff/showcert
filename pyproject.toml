@@ -20,7 +20,7 @@ dependencies = [
 authors = [
   { name="Yaroslav Polyakov", email="yaroslaff@gmail.com" },
 ]
-description = "Simple OpenSSL for humans: fetch/validate/show/save SSL certificates and warn about soon expiration"
+description = "Simple OpenSSL for humans: all you need for X.509 TLS certificates (and nothing more)"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
