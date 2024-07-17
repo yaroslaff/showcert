@@ -8,9 +8,7 @@ build-backend = "hatchling.build"
 [project]
 name="showcert"
 dynamic = [ "version" ]
-
-# how version managed by hatch
-# version="0.1.17"
+keywords = [ "SSL", "TLS", "certificate", "verify", "remote", "local", "X.509", "simple", "openssl", "alternative", "CA", "generate", "showcert", "gencert" ]
 
 dependencies = [
     'pyopenssl',
@@ -27,6 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Topic :: Security :: Cryptography"
 ]
 
 [project.urls]
