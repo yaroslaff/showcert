@@ -1,9 +1,8 @@
 import subprocess
 
-class TestShowcert():
+class TestShowcertRemote():
 
-    showcert = 'bin/showcert'
-    snakeoil = '/etc/ssl/certs/ssl-cert-snakeoil.pem'
+    showcert = 'showcert'
 
     sites = [ 'github.com', 'okerr.com', 'www-security.com', 'gmail.com' ]
     wildcard_sites = [ 'www.badssl.com' ]
@@ -12,14 +11,6 @@ class TestShowcert():
     pop3s_sites = ['pop.yandex.ru:995', 'pop.gmail.com:995']
     imap_sites = ['imap.yandex.ru:143']
     imaps_sites = ['imap.yandex.ru:993', 'imap.gmail.com:993']
-
-    def test_snakeoil(self):
-        rc = subprocess.run([self.showcert, self.snakeoil])
-        assert(rc.returncode == 1)
-
-        rc = subprocess.run([self.showcert, '-i', self.snakeoil])
-        assert(rc.returncode == 0)
-
 
     def test_https(self):
         for site in self.sites:
@@ -49,8 +40,6 @@ class TestShowcert():
             print(site)
             rc = subprocess.run([self.showcert, "-i", site])        
             assert(rc.returncode == 0)
-
-
 
     def test_pop3(self):
         for site in self.pop3_sites:
