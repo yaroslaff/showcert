@@ -10,7 +10,7 @@ showcert tries to follow these principles:
 
 ## showcert
 micro-cheatsheet (only 5 most often used commands):
-~~~
+~~~bash
 # Remote:
 showcert github.com
 showcert smtp.google.com:25
