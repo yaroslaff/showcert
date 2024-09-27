@@ -9,11 +9,18 @@ showcert tries to follow these principles:
 
 
 ## showcert
-micro-cheatsheet (only most often used commands):
+micro-cheatsheet (only 5 most often used commands):
 ~~~
+# Remote:
 showcert github.com
 showcert smtp.google.com:25
+# save remote certificate or whole --chain
 showcert --chain -o pem google.com > google-fullchain.pem
+
+# Local:
+# -i for insecure (process self-signed or expired certificates)
+showcert -i /etc/ssl/certs/ssl-cert-snakeoil.pem
+# letsencrypt-special sugar
 sudo showcert -q :le -w50 || echo local LetsEncrypt certificates will expire in less then 50 days
 ~~~
 
