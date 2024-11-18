@@ -33,12 +33,12 @@ def generate_cert(hostnames: list[str], ip_addresses: list[str] = None,
     """Generates self signed certificate for a hostname, and optional IP addresses."""
     
     # Generate our key
-    certkey = rsa.generate_private_key(
+    privkey = rsa.generate_private_key(
         public_exponent=65537,
         key_size=bits,
         backend=default_backend(),
     )
-    
+
     name = x509.Name([
         x509.NameAttribute(NameOID.COMMON_NAME, hostnames[0])
     ])
@@ -59,7 +59,7 @@ def generate_cert(hostnames: list[str], ip_addresses: list[str] = None,
     
     # path_len=0 means this cert can only sign itself, not other certs.
     
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
 
 
 
@@ -67,10 +67,14 @@ def generate_cert(hostnames: list[str], ip_addresses: list[str] = None,
 
     builder = x509.CertificateBuilder() \
         .subject_name(name) \
-        .public_key(certkey.public_key()) \
+        .public_key(privkey.public_key()) \
         .serial_number(x509.random_serial_number()) \
         .not_valid_before(now) \
         .not_valid_after(now + datetime.timedelta(days=days)) \
+
+    # Add Subject Key Identified (SKI)
+    ski = x509.SubjectKeyIdentifier.from_public_key(privkey.public_key())
+    builder = builder.add_extension(ski, critical=False)
 
     if ca:
         print("Generate CA certificate")
@@ -82,7 +86,7 @@ def generate_cert(hostnames: list[str], ip_addresses: list[str] = None,
 #                                b"CA:TRUE, pathlen:0"),
 
     else:
-        basic_constraints = x509.BasicConstraints(ca=True, path_length=0)
+        basic_constraints = x509.BasicConstraints(ca=False, path_length=None)
         builder = builder.add_extension(basic_constraints, False) \
             .add_extension(san, False)
 
@@ -94,19 +98,25 @@ def generate_cert(hostnames: list[str], ip_addresses: list[str] = None,
 
     # SIGN
     if cakey:
+        aki = x509.AuthorityKeyIdentifier.from_issuer_public_key(cakey.public_key())
+        builder = builder.add_extension(aki, critical=False)
+
         # sign with CA private key
         cert = builder.sign(private_key=cakey, 
             algorithm=hashes.SHA256(), 
             backend=default_backend())
-    else:
+    else:       
+        aki = x509.AuthorityKeyIdentifier.from_issuer_public_key(privkey.public_key())
+        builder = builder.add_extension(aki, critical=False)
+
         # self-sign
-        cert = builder.sign(private_key=certkey, 
+        cert = builder.sign(private_key=privkey, 
             algorithm=hashes.SHA256(), 
             backend=default_backend())
     
 
     cert_pem = cert.public_bytes(encoding=serialization.Encoding.PEM)
-    key_pem = certkey.private_bytes(
+    key_pem = privkey.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption(),

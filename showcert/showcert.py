@@ -5,6 +5,7 @@ import os
 import sys
 import argparse
 import re
+import hashlib
 import ssl
 import socket
 # import OpenSSL
@@ -65,7 +66,7 @@ def get_args():
     formatter_class=argparse.RawTextHelpFormatter, epilog=epilog)
     parser.add_argument('CERT', nargs='+', help='path, - (stdin), ":le" (letsencrypt cert path), hostname or hostname:port')
     parser.add_argument('-i', '--insecure', default=False, action='store_true', help='Do not verify remote certificate')
-    parser.add_argument('--output', '-o', default='brief', help='output format: brief, full, names, dnames (for certbot), pem, no.')
+    parser.add_argument('--output', '-o', default='brief', help='output format: brief, extended (ext), full, names, dnames (for certbot), pem, no.')
     parser.add_argument('-c','--chain', default=False, action='store_true', help='Show chain (not only server certificate)')
     parser.add_argument('-w', '--warn', default=None, metavar='DAYS', nargs='?', type=int, const=20, help='Warn about expiring certificates (def: 20 days)')
 
@@ -358,11 +359,17 @@ def print_dnames(crt):
     print('-d', ' -d '.join(names))
 
 
-def print_cert(crt: X509, addr=None, verified=False):
+def print_cert(crt: X509, fmt='brief', addr=None, verified=False):
 
     def tlist2str(tlist):
         return ' '.join([ '{}={}'.format(t[0].decode(), t[1].decode()) for t in tlist ])
 
+    def get_ext(str: X509, short_name: str):
+        for i in range(crt.get_extension_count()):
+            ext = crt.get_extension(i)
+            if ext.get_short_name() == short_name.encode():
+                return str(ext)  # Convert to string for readability
+        return None
 
     tags = list()
 
@@ -377,11 +384,20 @@ def print_cert(crt: X509, addr=None, verified=False):
     if verified:
         tags.append('[CHAIN-VERIFIED]')
 
+
     nbefore = datetime.strptime(crt.get_notBefore().decode(), '%Y%m%d%H%M%SZ')
     nafter = datetime.strptime(crt.get_notAfter().decode(), '%Y%m%d%H%M%SZ')
     daysold = (datetime.now() - nbefore).days
     daysleft = (nafter - datetime.now()).days
     issuer = tlist2str(crt.get_issuer().get_components())
+    fingerprint = crt.digest("sha256").decode("utf-8")
+
+    ski = get_ext(str, "subjectKeyIdentifier")
+    aki = get_ext(str, "authorityKeyIdentifier")    
+    #ski = crt.extensions.get_extension_for_oid(x509.ExtensionOID.SUBJECT_KEY_IDENTIFIER) \
+    #    .value.digest.hex()
+
+
 
     names = get_names(crt)
 
@@ -391,6 +407,14 @@ def print_cert(crt: X509, addr=None, verified=False):
     print("notBefore: {nbefore} ({days} days old)".format(nbefore=nbefore, days=daysold))
     print("notAfter: {nafter} ({days} days left)".format(nafter=nafter, days = daysleft))
     print("Issuer:", issuer)
+
+    if fmt.startswith('ext'):
+        print("Fingerprint (sha256):", fingerprint)
+        if ski:
+            print("SKI (sha256):", ski)
+        if aki:
+            print("AKI (sha256):", aki)
+
     if tags:
         print("Tags:", ' '.join(tags))
 
@@ -452,11 +476,11 @@ def process_cert(CERT, name=None, insecure=False, warn=False, starttls='auto'):
             r = dump_certificate(FILETYPE_PEM, _c)
             print(r.decode(), end='')
         return 0
-    elif out == 'brief':
+    elif out in ['brief', 'ext', 'extended']:
         for i,_c in enumerate(chain):
             if i>0:
                 print()
-            print_cert(_c, addr=sock_host, verified=verified)
+            print_cert(crt = _c, fmt=out, addr=sock_host, verified=verified)
 
     elif out == 'full':
         for i,_c in enumerate(chain):
