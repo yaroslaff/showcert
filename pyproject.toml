@@ -1,14 +1,17 @@
 [build-system]
 # requires = ["setuptools >= 40.6.0", "wheel"]
-requires = ["hatchling", "wheel"]
+requires = ["hatchling>=1.26.3","setuptools >= 40.6.0", "wheel"]
 
 # build-backend = "setuptools.build_meta"
 build-backend = "hatchling.build"
 
 [project]
 name="showcert"
+license = "MIT"
+# license = { file = "LICENSE" }
 dynamic = [ "version" ]
-keywords = [ "SSL", "TLS", "certificate", "verify", "remote", "local", "X.509", "simple", "openssl", "alternative", "CA", "generate", "showcert", "gencert" ]
+keywords = [ "SSL", "TLS", "certificate", "verify", "remote", "local", "X.509", "X509", "simple", 
+  "openssl", "alternative", "CA", "generate", "showcert", "gencert" ]
 
 dependencies = [
     'cryptography >= 41.0.0',
@@ -41,3 +44,7 @@ gencert = "showcert.gencert:main"
 [tool.hatch.version]
 # path = 'showcert:showcert/__main__.py'
 path = 'showcert/__init__.py'
+
+[tool.hatch.metadata]
+# license-files = ["LICENSE"]
+
