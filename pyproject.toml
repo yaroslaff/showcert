@@ -1,21 +1,22 @@
 [build-system]
 # requires = ["setuptools >= 40.6.0", "wheel"]
-requires = ["hatchling>=1.26.3","setuptools >= 40.6.0", "wheel"]
+# requires = ["hatchling>=1.26.3","setuptools >= 40.6.0", "wheel"]
+requires = ["hatchling>=1.27.0", "wheel"]
 
 # build-backend = "setuptools.build_meta"
 build-backend = "hatchling.build"
 
 [project]
 name="showcert"
-license = "MIT"
-# license = { file = "LICENSE" }
+# license = "MIT"
+license = { file = "LICENSE" }
 dynamic = [ "version" ]
 keywords = [ "SSL", "TLS", "certificate", "verify", "remote", "local", "X.509", "X509", "simple", 
   "openssl", "alternative", "CA", "generate", "showcert", "gencert" ]
 
 dependencies = [
     'cryptography >= 41.0.0',
-    'pyopenssl >= 21.0.0',
+    'pyopenssl >= 24.0.0',
     'pem >= 23.1.0',
     'certifi >= 2018.10.15'
 ]

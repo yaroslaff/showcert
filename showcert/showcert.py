@@ -38,6 +38,9 @@ class CertException(Exception):
 class InvalidCertificate(CertException):
     pass
 
+class InvalidAddress(CertException):
+    pass
+
 class ServerError(CertException):
     pass
 
@@ -222,7 +225,10 @@ def get_remote_certs(location, name=None, insecure=False, starttls='auto'):
     }
 
     if ':' in location:
-        (host, port) = location.split(':')
+        try:
+            (host, port) = location.split(':')
+        except ValueError:
+            raise InvalidAddress('Invalid remote address. Valid examples: github.com or smtp.google.com:25')
     else:
         host = location
         port = 443
@@ -232,7 +238,10 @@ def get_remote_certs(location, name=None, insecure=False, starttls='auto'):
     try:
         port = services[port]
     except KeyError:
-        port = int(port)
+        try:
+            port = int(port)
+        except ValueError:
+            raise InvalidAddress('Invalid remote address. Valid examples: github.com or smtp.google.com:25')
 
     certlist = get_certificate_chain(host, name=name, port=port, insecure=insecure, starttls=starttls)
     
