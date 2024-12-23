@@ -318,12 +318,22 @@ def get_names(crt):
             except:
                 return ''
 
+        def get_san_dns(extdata):
+            for rec in extension_data['subjectAltName'].split(','):
+                try:
+                    t, v = rec.strip().split(':')
+                    if t == 'DNS':
+                        yield v
+                except ValueError:
+                    """ /etc/ssl/certs/Izenpe.com.pem has incorrect(?) SAN field """
+                    pass
+
         extensions = (cert.get_extension(i) for i in range(cert.get_extension_count()))
 
         extension_data = {e.get_short_name().decode(): safestr(e) for e in extensions}
 
         try:
-            return [ n.split(':')[1] for n in extension_data['subjectAltName'].split(',') ]
+            return list(get_san_dns(extension_data))
         except KeyError:
             return [] # No subjectAltName
         except IndexError:
@@ -420,9 +430,9 @@ def print_cert(crt: X509, fmt='brief', addr=None, verified=False):
     if fmt.startswith('ext'):
         print("Fingerprint (sha256):", fingerprint)
         if ski:
-            print("SKI (sha256):", ski)
+            print("Subject KI:", ski)
         if aki:
-            print("AKI (sha256):", aki)
+            print("Authority KI:", aki)
 
     if tags:
         print("Tags:", ' '.join(tags))
