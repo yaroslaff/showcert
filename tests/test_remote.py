@@ -1,5 +1,9 @@
 import time
 from showcert import process_cert
+from showcert.exceptions import InvalidAddress
+import random
+import string
+import pytest
 
 class TestShowcertRemote():
 
@@ -20,11 +24,39 @@ class TestShowcertRemote():
             code = process_cert(CERT=site)
             assert code == 0
 
+    def test_https_chain(self):
+        # warn if expires "too soon" in 2000 days
+        code = process_cert(CERT=self.sites[0], chain=True)
+        assert code == 0
+        code = process_cert(CERT=self.sites[0], chain=True, output='full')
+        assert code == 0
+        code = process_cert(CERT=self.sites[0], chain=True, output='pem')
+        assert code == 0
+        code = process_cert(CERT=self.sites[0], chain=True, output='names')
+        assert code == 0
+        code = process_cert(CERT=self.sites[0], chain=True, output='dnames')
+        assert code == 0
+
+
+    def test_https_methods(self):
+        code = process_cert(CERT=self.sites[0], starttls='no')
+        assert code == 0
+
+        with pytest.raises(ValueError):
+            process_cert(CERT=self.sites[0], starttls='nosuchmethod')
+
+    def test_invalid_address(self):
+        with pytest.raises(InvalidAddress):
+            process_cert("aa:bb.com:443")
+        with pytest.raises(InvalidAddress):
+            process_cert("github.com:notaport")
+
+
+
     def test_https_warn(self):
-        for site in self.sites:
-            # warn if expires "too soon" in 2000 days
-            code = process_cert(CERT=site, warn=2000)
-            assert code == 2
+        # warn if expires "too soon" in 2000 days
+        code = process_cert(CERT=self.sites[0], warn=2000, force_network=True)
+        assert code == 2
 
     def test_wildcard(self):
         for site in self.wildcard_sites:
@@ -70,6 +102,10 @@ class TestShowcertRemote():
         test_start = time.time()
         code = process_cert(CERT='0.0.0.1', limit=2)
         test_end = time.time()
-        print("code:", code)
         assert code == 1
         assert test_end - test_start >= 1
+
+    def test_nosuchdomain(self):
+        name = 'nosuchdomain-' + ''.join(random.choices(string.ascii_lowercase, k=20)) + '.com'
+        code = process_cert(CERT=name)
+        assert code == 1

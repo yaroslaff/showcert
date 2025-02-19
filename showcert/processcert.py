@@ -133,7 +133,7 @@ def process_cert(CERT, name=None, insecure=False, warn=None, starttls='auto', ou
                 print()
             print_dnames(_c)
 
-    elif out == 'no' or out[0] == 'quiet':
+    elif out == 'no':
         pass
 
     else:

@@ -1,4 +1,6 @@
 from showcert import process_cert
+from unittest import mock
+import io
 
 class TestShowcertLocal():
 
@@ -14,6 +16,14 @@ class TestShowcertLocal():
         rc = process_cert(CERT=self.snakeoil, insecure=True)
         assert(rc == 0)
 
+    def test_snakeoil_output(self):
+        rc = process_cert(CERT=self.snakeoil, output='no', insecure=True)
+        assert(rc == 0)
+
+        rc = process_cert(CERT=self.snakeoil, output='nosuchformat', insecure=True)
+        assert(rc == 0)
+
+
     def test_ca(self):
         for ca in self.ca_certs:
             rc = process_cert(CERT=ca)
@@ -28,3 +38,14 @@ class TestShowcertLocal():
         assert(rc == 0)
         rc = process_cert(CERT=self.snakeoil, output='dnames', insecure=True)
         assert(rc == 0)
+        rc = process_cert(CERT=self.snakeoil, output='pem', insecure=True)
+        assert(rc == 0)
+        rc = process_cert(CERT=self.snakeoil, output='no', insecure=True)
+        assert(rc == 0)
+
+    def test_stdin(self):
+        with open(self.ca_certs[0], "r") as f:  # Read the certificate file
+            mock_input = f.read()
+        with mock.patch("sys.stdin", io.StringIO(mock_input)):
+            rc = process_cert(CERT='-')
+            assert rc == 0

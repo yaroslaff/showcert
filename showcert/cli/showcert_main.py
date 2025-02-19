@@ -52,7 +52,7 @@ def get_args():
     formatter_class=argparse.RawTextHelpFormatter, epilog=epilog)
     parser.add_argument('CERT', nargs='+', help='path, - (stdin), ":le" (letsencrypt cert path), hostname or hostname:port')
     parser.add_argument('-i', '--insecure', default=False, action='store_true', help='Do not verify remote certificate')
-    parser.add_argument('--output', '-o', default='brief', help='output format: brief, extended (ext), full, names, dnames (for certbot), pem, no.')
+    parser.add_argument('--output', '-o', choices=['brief', 'ext', 'full', 'names', 'dnames', 'pem', 'no'], default='brief', help='output format')
     parser.add_argument('-c','--chain', default=False, action='store_true', help='Show chain (not only server certificate)')
     parser.add_argument('-w', '--warn', default=None, metavar='DAYS', nargs='?', type=int, const=20, help='Warn about expiring certificates (def: 20 days)')
 
