@@ -32,9 +32,9 @@ from .. import __version__
 # https://github.com/ikreymer/certauth/blob/master/certauth/certauth.py
 
 
-def generate_cert(hostnames: list[str], ip_addresses: list[str] = None, 
+def generate_cert(hostnames: list, ip_addresses: list = None, 
                     cakey=None, cacert=None, days=365, bits=2048, 
-                    ca=False) -> tuple[Certificate, rsa.RSAPrivateKey]:
+                    ca=False) -> tuple:
     """Generates self signed certificate for a hostname, and optional IP addresses."""
     
     # Generate our key

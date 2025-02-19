@@ -49,11 +49,20 @@ path = 'showcert/__init__.py'
 [tool.hatch.metadata]
 # license-files = ["LICENSE"]
 
+[tool.hatch.envs]
+py38 = { python = "3.8" }
+py39 = { python = "3.9" }
+py310 = { python = "3.10" }
+py311 = { python = "3.11" }
+py312 = { python = "3.12" }
+
 [tool.hatch.envs.default]
 dependencies = [
   "coverage[toml]>=6.5",
   "pytest",
 ]
+
+
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
 test-cov = "coverage run -m pytest {args:tests}"
@@ -65,9 +74,13 @@ cov = [
   "cov-report",
 ]
 
+
 [tool.coverage.report]
 exclude_lines = [
   "no cov",
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
 ]
+
+
+
