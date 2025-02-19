@@ -23,7 +23,16 @@ jobs:
         run: pip install .
 
       - name: Run tests
-        run: pytest --cov=showcert --cov-branch --cov-report=xml --cov-report=xml:coverage.xml -s
+        run: echo pytest --cov=showcert --cov-branch --cov-report=xml --cov-report=xml:coverage.xml -s
+
+      - name: debug run pytest
+        run: coverage run -m pytest
+
+      - name: Debug run report -m
+        run: coverage report -m
+
+      - name: Run tests
+        run: coverage xml
 
       - name: List files
         run: ls -al
