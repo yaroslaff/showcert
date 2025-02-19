@@ -22,11 +22,11 @@ jobs:
       - name: Install package
         run: pip install .
 
-      - name: Run tests
+      - name: Run tests (disabled)
         run: echo pytest --cov=showcert --cov-branch --cov-report=xml --cov-report=xml:coverage.xml -s
 
       - name: debug run pytest
-        run: coverage run -m pytest
+        run: coverage run --source=showcert -m pytest
 
       - name: Debug run report -m
         run: coverage report -m
