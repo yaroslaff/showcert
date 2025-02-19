@@ -1,5 +1,7 @@
 # showcert - simple OpenSSL for humans
 
+[![PyPI version](https://badge.fury.io/py/showcert.svg)](https://badge.fury.io/py/showcert)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/showcert)
 ![Run tests and upload coverage](https://github.com/yaroslaff/showcert/actions/workflows/main.yml/badge.svg)
 [![codecov](https://codecov.io/github/yaroslaff/showcert/graph/badge.svg?token=VOACSID3PP)](https://codecov.io/github/yaroslaff/showcert)
 
