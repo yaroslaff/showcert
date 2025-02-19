@@ -23,7 +23,7 @@ jobs:
         run: pip install .
 
       - name: Run tests
-        run: pytest --cov=argalias --cov-branch --cov-report=xml --cov-report=xml:coverage.xml
+        run: pytest --cov=showcert --cov-branch --cov-report=xml --cov-report=xml:coverage.xml
 
       - name: List files
         run: ls -al
@@ -33,4 +33,4 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: yaroslaff/showcert
-          
+
