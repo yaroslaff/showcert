@@ -49,7 +49,7 @@ gencert = "showcert.cli.gencert_main:main"
 
 [tool.hatch.version]
 # path = 'showcert:showcert/__main__.py'
-path = 'showcert/__init__.py'
+path = 'showcert/__about__.py'
 
 [tool.hatch.metadata]
 # license-files = ["LICENSE"]
