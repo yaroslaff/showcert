@@ -8,23 +8,25 @@ from .exceptions import ServerError, InvalidAddress
 
 phrase = namedtuple('Phrase', 'say wait expect')
 
+# not covering conversation because it's hard to find server which would produce protocol errors
+
 def conversation(s, script):
     verbose = False
     for ph in script:
         if ph.say is not None:
             if verbose:
-                print(">", repr(ph.say))
+                print(">", repr(ph.say)) # pragma: no cover
             s.sendall(ph.say.encode())
         reply = s.recv(2048).decode('utf8')
         if verbose:
-            print("<", repr(reply))
-            print("wait:", repr(ph.wait))
-        if ph.wait is not None and ph.wait not in reply:
-            raise ServerError('Not found {!r} in server reply {!r} to {!r}'.format(ph.wait, reply, ph.say))
-        if ph.expect is not None and ph.expect not in reply:
-            raise ServerError('Not found {!r} in server reply {!r} to {!r}'.format(ph.expect, reply, ph.say))
+            print("<", repr(reply))  # pragma: no cover
+            print("wait:", repr(ph.wait)) # pragma: no cover
+        if ph.wait is not None and ph.wait not in reply: # pragma: no cover
+            raise ServerError('Not found {!r} in server reply {!r} to {!r}'.format(ph.wait, reply, ph.say)) # pragma: no cover
+        if ph.expect is not None and ph.expect not in reply: # pragma: no cover
+            raise ServerError('Not found {!r} in server reply {!r} to {!r}'.format(ph.expect, reply, ph.say)) # pragma: no cover
         if verbose:
-            print("got it")
+            print("got it") # pragma: no cover
 
 def starttls_imap(s):
     script = (
@@ -73,6 +75,9 @@ def start_tls(s, method, port):
         except KeyError:
             # no special handling needed
             return
+    else:
+        if method not in method_map:
+            raise ValueError('Unknown starttls method {!r}'.format(method))
 
     return method_map[method](s)
 

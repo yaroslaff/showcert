@@ -4,6 +4,8 @@ import argparse
 import ipaddress
 import datetime
 import os
+import sys
+import ipaddress
 
 from typing import List
 
@@ -53,7 +55,7 @@ def generate_cert(hostnames: list[str], ip_addresses: list[str] = None,
     if ip_addresses:
         for addr in ip_addresses:
             # openssl wants DNSnames for ips...
-            alt_names.append(x509.DNSName(addr))
+            # we add above: alt_names.append(x509.DNSName(addr))
             # ... whereas golang's crypto/tls is stricter, and needs IPAddresses
             # note: older versions of cryptography do not understand ip_address objects
             alt_names.append(x509.IPAddress(ipaddress.ip_address(addr)))
@@ -196,10 +198,11 @@ def save_key(fh, key: rsa.RSAPrivateKey):
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption()))
 
-def main():
+def main() -> int:
     args = get_args()
     ca_privkey = None
     ca_cert = None
+    ipaddresses = list()
 
     certfile = args.cert
     keyfile = args.key
@@ -228,10 +231,19 @@ def main():
     #        ca_privkey = serialization.load_pem_private_key(fh.read(), password=None)
 
 
+    for h in args.hostnames:
+        try:
+            ipaddress.ip_address(h)
+            ipaddresses.append(h)
+        except ValueError:
+            pass
+
+
     cert, key = generate_cert(hostnames = args.hostnames, 
-                                         days=args.days, bits=args.bits,
-                                         cakey=ca_privkey, cacert=ca_cert,
-                                         ca=args.ca)
+                    ip_addresses = ipaddresses,
+                    days=args.days, bits=args.bits,
+                    cakey=ca_privkey, cacert=ca_cert,
+                    ca=args.ca)
 
 
     with open(certfile, "wb") as fh:
@@ -244,5 +256,7 @@ def main():
         with open(keyfile, "wb") as fh:
             save_key(fh, key)
 
+    return 0
+
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

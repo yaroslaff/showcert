@@ -41,54 +41,6 @@ def get_names(crt: x509.Certificate) -> List[str]:
     names.extend([name.value for name in SAN if isinstance(name, x509.DNSName)])
     return names
 
-def OLD_get_names(crt):
-
-    def tlist2value(tlist, key):
-        for t in tlist:
-            if t[0].decode() == key:
-                return t[1].decode()
-
-    def get_SAN(cert):
-
-        def safestr(x):
-            try:
-                return str(x)
-            except:
-                return ''
-
-        def get_san_dns(extdata):
-            for rec in extension_data['subjectAltName'].split(','):
-                try:
-                    t, v = rec.strip().split(':')
-                    if t == 'DNS':
-                        yield v
-                except ValueError:
-                    """ /etc/ssl/certs/Izenpe.com.pem has incorrect(?) SAN field """
-                    pass
-
-        extensions = (cert.get_extension(i) for i in range(cert.get_extension_count()))
-
-        extension_data = {e.get_short_name().decode(): safestr(e) for e in extensions}
-
-        try:
-            return list(get_san_dns(extension_data))
-        except KeyError:
-            return [] # No subjectAltName
-        except IndexError:
-            raise InvalidCertificate('Unusual certificate, cannot parse SubjectAltName')
-
-    subject = tlist2value(crt.get_subject().get_components(), 'CN')
-    names = get_SAN(crt)
-
-    if subject in names:
-        names.remove(subject)
-    
-    if subject:
-        # add only if Subject exists (yes, not always)
-        names.insert(0, subject)
-    return names
-
-
 def is_self_signed(crt: x509.Certificate):
     return crt.issuer == crt.subject
 
@@ -106,13 +58,16 @@ def is_CA(crt: x509.Certificate):
 def print_full_cert(crt):
     print(dump_certificate(FILETYPE_TEXT, crt).decode())
 
-def print_names(crt):
-    names = get_names(crt)
+def print_names(crt: X509):
+    # expects openssl crt!
+    cc = convert_openssl_to_cryptography(crt)
+    names = get_names(cc)
 
     print(' '.join(names))
 
 def print_dnames(crt):
-    names = get_names(crt)
+    cc = convert_openssl_to_cryptography(crt)
+    names = get_names(cc)
     print('-d', ' -d '.join(names))
 
 def hexify(b: bytes) -> str:

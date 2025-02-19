@@ -93,7 +93,7 @@ def main():
                 chain=args.chain,
                 limit=args.limit)
             maxrc = max(maxrc, rc)
-        except CertException as e:
+        except (CertException, ValueError) as e:
             print("{}: {}".format(cert, e))
             maxrc=1
     return(maxrc)

@@ -18,3 +18,13 @@ class TestShowcertLocal():
         for ca in self.ca_certs:
             rc = process_cert(CERT=ca)
             assert(rc == 0)
+
+    def test_print(self):
+        rc = process_cert(CERT=self.ca_certs[0], output='full')
+        assert(rc == 0)
+        rc = process_cert(CERT=self.ca_certs[0], output='ext')
+        assert(rc == 0)
+        rc = process_cert(CERT=self.snakeoil, output='names', insecure=True)
+        assert(rc == 0)
+        rc = process_cert(CERT=self.snakeoil, output='dnames', insecure=True)
+        assert(rc == 0)

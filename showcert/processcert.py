@@ -72,7 +72,7 @@ def process_cert(CERT, name=None, insecure=False, warn=None, starttls='auto', ou
             file=sys.stderr)
         return 1
     except socket.timeout as e:
-        print("Timeout connecting to {}".format(CERT), file=sys.stderr)
+        print("Timeout with {}".format(CERT), file=sys.stderr)
         return 1
     except socket.gaierror as e:
         print("Error with {}: {}".format(CERT, e), file=sys.stderr)

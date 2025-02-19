@@ -12,6 +12,7 @@ class TestShowcertRemote():
     pop3s_sites = ['pop.yandex.ru:995', 'pop.gmail.com:995']
     imap_sites = ['imap.yandex.ru:143']
     imaps_sites = ['imap.yandex.ru:993', 'imap.gmail.com:993']
+    smtp_sites = ['smtp.yandex.ru:25']
 
     def test_https(self):
         for site in self.sites:
@@ -38,6 +39,11 @@ class TestShowcertRemote():
     def test_badssl_ignore(self):
         for site in self.badssl_sites:
             code = process_cert(CERT=site, insecure=True)
+            assert code == 0
+
+    def test_smtp(self):
+        for site in self.smtp_sites:
+            code = process_cert(CERT=site)
             assert code == 0
 
     def test_pop3(self):
@@ -67,4 +73,3 @@ class TestShowcertRemote():
         print("code:", code)
         assert code == 1
         assert test_end - test_start >= 1
-        
