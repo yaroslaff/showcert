@@ -8,6 +8,7 @@ import os
 from typing import List
 
 from cryptography import x509
+from cryptography.x509 import Certificate
 from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
@@ -16,7 +17,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 
 
-from . import __version__
+
+from .. import __version__
 
 
 # Gists:
@@ -29,7 +31,8 @@ from . import __version__
 
 
 def generate_cert(hostnames: list[str], ip_addresses: list[str] = None, 
-                             cakey=None, cacert=None, days=None, bits=None, ca=False):
+                    cakey=None, cacert=None, days=365, bits=2048, 
+                    ca=False) -> tuple[Certificate, rsa.RSAPrivateKey]:
     """Generates self signed certificate for a hostname, and optional IP addresses."""
     
     # Generate our key
@@ -115,14 +118,14 @@ def generate_cert(hostnames: list[str], ip_addresses: list[str] = None,
             backend=default_backend())
     
 
-    cert_pem = cert.public_bytes(encoding=serialization.Encoding.PEM)
-    key_pem = privkey.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.TraditionalOpenSSL,
-        encryption_algorithm=serialization.NoEncryption(),
-    )
-
-    return cert_pem, key_pem
+    # cert_pem = cert.public_bytes(encoding=serialization.Encoding.PEM)
+    # key_pem = privkey.private_bytes(
+    #    encoding=serialization.Encoding.PEM,
+    #    format=serialization.PrivateFormat.TraditionalOpenSSL,
+    #    encryption_algorithm=serialization.NoEncryption(),
+    #)
+    # return cert_pem, key_pem
+    return cert, privkey
 
 def get_args():
 
@@ -182,10 +185,16 @@ def load_privkey(files: List[str]):
         with open(file, 'rb') as fh:
             try:
                 privkey = serialization.load_pem_private_key(fh.read(), password=None)
-                # print(f"Loaded privkey from {file}")
                 return privkey
             except ValueError:
                 pass
+
+
+def save_key(fh, key: rsa.RSAPrivateKey):
+    fh.write(key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=serialization.NoEncryption()))
 
 def main():
     args = get_args()
@@ -219,7 +228,6 @@ def main():
     #        ca_privkey = serialization.load_pem_private_key(fh.read(), password=None)
 
 
-
     cert, key = generate_cert(hostnames = args.hostnames, 
                                          days=args.days, bits=args.bits,
                                          cakey=ca_privkey, cacert=ca_cert,
@@ -227,14 +235,14 @@ def main():
 
 
     with open(certfile, "wb") as fh:
-        fh.write(cert)
+        fh.write(cert.public_bytes(encoding=serialization.Encoding.PEM))
         if keyfile == certfile:
-            fh.write(key)
+            save_key(fh, key)
     
     if keyfile != certfile:
         # different key file
         with open(keyfile, "wb") as fh:
-            fh.write(key)
+            save_key(fh, key)
 
 if __name__ == '__main__':
     main()

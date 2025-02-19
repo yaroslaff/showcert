@@ -39,8 +39,8 @@ Issues = "https://github.com/yaroslaff/showcert/issues"
 
 
 [project.scripts]
-showcert = "showcert.showcert:main"
-gencert = "showcert.gencert:main"
+showcert = "showcert.cli.showcert_main:main"
+gencert = "showcert.cli.gencert_main:main"
 
 [tool.hatch.version]
 # path = 'showcert:showcert/__main__.py'
@@ -49,3 +49,18 @@ path = 'showcert/__init__.py'
 [tool.hatch.metadata]
 # license-files = ["LICENSE"]
 
+[tool.hatch.envs.default]
+dependencies = [
+  "coverage[toml]>=6.5",
+  "pytest",
+]
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = [
+  "coverage report",
+]
+cov = [
+  "test-cov",
+  "cov-report",
+]
