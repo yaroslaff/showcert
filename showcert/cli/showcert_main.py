@@ -55,6 +55,7 @@ def get_args():
     parser.add_argument('--output', '-o', choices=['brief', 'ext', 'full', 'names', 'dnames', 'pem', 'no'], default='brief', help='output format')
     parser.add_argument('-c','--chain', default=False, action='store_true', help='Show chain (not only server certificate)')
     parser.add_argument('-w', '--warn', default=None, metavar='DAYS', nargs='?', type=int, const=20, help='Warn about expiring certificates (def: 20 days)')
+    parser.add_argument('-p', '--password', default=None, metavar='PASSWORD', help='Password (for PKCS#12 certificates)')
 
     g = parser.add_argument_group('Rarely needed options')
     g.add_argument('-q', '--quiet', default=False, action='store_true', help='Quiet mode, same as --output no')
@@ -91,7 +92,8 @@ def main():
                 force_network=args.net,
                 trusted_ca=args.ca,
                 chain=args.chain,
-                limit=args.limit)
+                limit=args.limit,
+                password=args.password)
             maxrc = max(maxrc, rc)
         except (CertException, ValueError) as e:
             print("{}: {}".format(cert, e))

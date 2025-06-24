@@ -6,7 +6,16 @@ from OpenSSL.crypto import FILETYPE_PEM, FILETYPE_TEXT, load_certificate, \
     dump_certificate, X509, X509Store, X509StoreContext, \
     X509StoreContextError
 from OpenSSL import SSL
+
+from cryptography.hazmat.primitives.serialization import pkcs12
+from cryptography.hazmat.primitives import serialization
+
+from cryptography.hazmat.backends import default_backend
+from cryptography import x509 as cryptography_x509
+
+
 import pem
+import magic
 import socket
 
 from .getremote import get_remote_certs
@@ -25,19 +34,34 @@ def is_local(cert, net):
         return True
     return False
 
+def crypto_cert_to_pyopenssl(cert: cryptography_x509.Certificate) -> X509:
+    pem_bytes = cert.public_bytes(encoding=serialization.Encoding.PEM)
+    return load_certificate(FILETYPE_PEM, pem_bytes)
 
-
-def get_local_certs(CERT, insecure=False):
+def get_local_certs(CERT, insecure=False, password=None):
     if CERT == '-':
-        rawcert = sys.stdin.read().encode()
+        rawcert = sys.stdin.read()
     else:        
-        rawcert = open(CERT).read().encode()
+        rawcert = open(CERT, "rb").read()
 
 
-    # raw_ca = open(args.ca).read().rstrip().encode()
+    mime = magic.from_buffer(rawcert, mime=True)
 
-    return [ load_certificate(FILETYPE_PEM, str(_c)) for _c in pem.parse(rawcert) if _c.__class__.__name__ == 'Certificate' ]
+    if mime.startswith("text/") or b"BEGIN CERTIFICATE" in rawcert:
+        # default simple PEM part
+        return [ load_certificate(FILETYPE_PEM, str(_c)) for _c in pem.parse(rawcert) if _c.__class__.__name__ == 'Certificate' ]
 
+    elif mime in ("application/x-pkcs12", "application/octet-stream"):
+        # PKCS#12 part
+        key, cert, addl = pkcs12.load_key_and_certificates(
+            rawcert, password.encode() if password else None, default_backend()
+        )
+        certs = []
+        if cert:
+            certs.append(crypto_cert_to_pyopenssl(cert))
+        if addl:
+            certs.extend(crypto_cert_to_pyopenssl(c) for c in addl)
+        return certs
 
 def get_days_left(crt):
     nafter = datetime.strptime(crt.get_notAfter().decode(), '%Y%m%d%H%M%SZ')
@@ -47,7 +71,7 @@ def get_days_left(crt):
 
 
 def process_cert(CERT, name=None, insecure=False, warn=None, starttls='auto', output='brief',
-                 force_network=False, trusted_ca=None, limit=None, chain=False):
+                 force_network=False, trusted_ca=None, limit=None, chain=False, password=None):
 
     retcode = 0
     hostname = None
@@ -57,8 +81,9 @@ def process_cert(CERT, name=None, insecure=False, warn=None, starttls='auto', ou
     verified = None
 
     try:
-        if is_local(CERT, force_network):
-            cert_chain = get_local_certs(CERT)
+        if is_local(CERT, net=force_network):
+            cert_chain = get_local_certs(CERT, password=password)
+
             path = CERT
             if not cert_chain:
                 raise InvalidCertificate('Can not load certificate from file '+ CERT + '\nUse option --net if you want to check host ' + CERT)
