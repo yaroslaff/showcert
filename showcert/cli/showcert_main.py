@@ -14,6 +14,8 @@ import glob
 from datetime import datetime
 from cryptography import x509
 
+from urllib.parse import urlparse
+
 from ..__about__ import __version__
 from ..getremote import get_remote_certs
 from ..exceptions import CertException, InvalidCertificate
@@ -26,6 +28,11 @@ from ..processcert import process_cert
 
 # do not  use CLI args globally
 # args = None
+
+def fix_cert(url: str) -> str:
+    """ if https url: translate it to host """
+    parsed = urlparse(url)    
+    return parsed.hostname or url
 
 def get_args():
     def_ca = certifi.where()
@@ -83,7 +90,7 @@ def main():
     for cert in args.CERT:
         try:
             rc = process_cert(
-                CERT=cert, 
+                CERT=fix_cert(cert), 
                 name=args.name, 
                 insecure=args.insecure, 
                 warn=args.warn, 

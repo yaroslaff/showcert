@@ -54,6 +54,20 @@ def is_CA(crt: x509.Certificate):
     # If BasicConstraints is not present, or if it is present and CA is set to True, it is a CA certificate
     return basic_constraints is None or basic_constraints.ca
 
+def is_EV(crt: x509.Certificate) -> bool:
+    EV_OIDS = ['2.23.140.1.1']
+    try:
+        policies = crt.extensions.get_extension_for_class(x509.CertificatePolicies).value
+        for policy in policies:
+            if policy.policy_identifier.dotted_string in EV_OIDS:
+                return True  # Found a policy OID that matches a known EV OID
+
+    except x509.ExtensionNotFound:
+        # No certificate policies extension found
+        pass
+    
+    return False
+
 
 def print_full_cert(crt):
     print(dump_certificate(FILETYPE_TEXT, crt).decode())
@@ -88,7 +102,10 @@ def print_cert(crt: X509, fmt='brief', addr=None, path=None, verified=False):
 
     if is_CA(crypto_crt):
         tags.append('[CA]')
-    
+
+    if is_EV(crypto_crt):
+        tags.append('[EV]')
+
     if verified:
         tags.append('[CHAIN-VERIFIED]')
 
