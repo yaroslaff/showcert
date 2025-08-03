@@ -119,21 +119,16 @@ def get_certificate_chain(host, name=None, port=443, insecure=False, starttls='a
     
     conn.set_connect_state()
 
-    if insecure:
-        try:
-            conn.do_handshake()
-        except SSL.Error as e:
-            # rare case, e.g. RabbitMQ on 5671 which reset connection if client certificate is not sent
-            # never happens on webservers
-            errors = e.args[0]
-            for lib, func, reason in errors:
-                # print(f"{lib=} {func=} {reason=}")
-                if "handshake failure" in reason.lower():
-                    print("# Server likely requires a client certificate (handshake failure)")
-                    
-    else:
+    try:
         conn.do_handshake()
-
+    except SSL.Error as e:
+        # rare case, e.g. RabbitMQ on 5671 which reset connection if client certificate is not sent
+        # never happens on webservers
+        if insecure and 'ssl/tls alert handshake failure' in str(e):
+            print("# Server likely requires a client certificate (handshake failure)")
+        else:
+            raise
+                
     if conn.get_client_ca_list():
         print("# Remote asks for a client certificate")
 
