@@ -37,6 +37,9 @@ jobs:
       - name: List files
         run: ls -al
 
+      - name: Print coverage.xml
+        run: cat coverage.xml
+
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v5
         with:
