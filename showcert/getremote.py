@@ -138,7 +138,19 @@ def get_certificate_chain(host, name=None, port=443, insecure=False, starttls='a
     conn.set_tlsext_host_name(name.encode())
     
     conn.set_connect_state()
-    conn.do_handshake()
+
+    try:
+        conn.do_handshake()
+    except SSL.Error as e:
+        # rare case, e.g. RabbitMQ on 5671 which reset connection if client certificate is not sent
+        # never happens on webservers
+        if insecure and 'ssl/tls alert handshake failure' in str(e):
+            print("# Server likely requires a client certificate (handshake failure)")
+        else:
+            raise
+                
+    if conn.get_client_ca_list():
+        print("# Remote asks for a client certificate")
 
     chain = conn.get_peer_cert_chain()
     return sock_host, chain
