@@ -83,6 +83,7 @@ def start_tls(s, method, port):
 
 
 def connect46(host, port, limit=5):
+    s = None
     for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM):
         af, socktype, proto, canonname, sa = res
         try:
@@ -90,10 +91,11 @@ def connect46(host, port, limit=5):
             s.settimeout(limit)
             s.connect(sa)
             return s
-        except Exception:
-            s.close()
-            continue
-    raise OSError(f"Could not connect to {host}:{port}")
+        except Exception as e:
+            if s is not None:
+                s.close()
+            raise
+    
 
 def get_certificate_chain(host, name=None, port=443, insecure=False, starttls='auto', 
                           trusted_ca=None, limit=3):
