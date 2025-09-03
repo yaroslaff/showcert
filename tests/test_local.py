@@ -7,7 +7,7 @@ class TestShowcertLocal():
     showcert = 'showcert'
     gencert = 'gencert'
     snakeoil = '/etc/ssl/certs/ssl-cert-snakeoil.pem'
-    ca_certs = ['/etc/ssl/certs/Go_Daddy_Class_2_CA.pem', '/etc/ssl/certs/Amazon_Root_CA_2.pem']
+    ca_certs = [ '/etc/ssl/certs/DigiCert_Global_Root_CA.pem', '/etc/ssl/certs/Amazon_Root_CA_1.pem', '/etc/ssl/certs/Amazon_Root_CA_2.pem']
 
     def test_snakeoil(self):
         rc = process_cert(CERT=self.snakeoil)
@@ -26,6 +26,7 @@ class TestShowcertLocal():
 
     def test_ca(self):
         for ca in self.ca_certs:
+            print("test:", ca)
             rc = process_cert(CERT=ca)
             assert(rc == 0)
 

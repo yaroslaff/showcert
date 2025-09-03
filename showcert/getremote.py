@@ -82,9 +82,23 @@ def start_tls(s, method, port):
     return method_map[method](s)
 
 
+def connect46(host, port, limit=5):
+    for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM):
+        af, socktype, proto, canonname, sa = res
+        try:
+            s = socket.socket(af, socktype, proto)
+            s.settimeout(limit)
+            s.connect(sa)
+            return s
+        except Exception:
+            s.close()
+            continue
+    raise OSError(f"Could not connect to {host}:{port}")
+
 def get_certificate_chain(host, name=None, port=443, insecure=False, starttls='auto', 
                           trusted_ca=None, limit=3):
     
+
     name = name or host
     context = SSL.Context(method=SSL.TLS_CLIENT_METHOD)
 
@@ -97,15 +111,21 @@ def get_certificate_chain(host, name=None, port=443, insecure=False, starttls='a
         context.load_verify_locations(trusted_ca)
 
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(limit)    
-    s.connect((host, port))
+    # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # s.settimeout(limit)
+    try:
+        # s.connect((host, port))
+        s = connect46(host, port, limit=limit)
+    except Exception as e:
+        print(type(e))
+        print(e)
+        raise
 
+    peername = s.getpeername()
+    sock_host = peername[0]
+    sock_port = peername[1]
 
-    sock_host, sock_port = s.getpeername()
-    
     start_tls(s, starttls, port)
-
     conn = SSL.Connection(
         context, socket=s
     )
