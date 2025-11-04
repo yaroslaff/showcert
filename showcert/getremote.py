@@ -12,7 +12,7 @@ phrase = namedtuple('Phrase', 'say wait expect')
 
 
 
-def recv_until_newline(sock: socket.socket, timeout: float = 5.0) -> bytes:
+def recv_until_newline(sock: socket.socket, timeout: float = 5.0) -> bytes: # pragma: no cover
     """Read from socket until '\n' seen or timeout expires."""
     sock.setblocking(False)
     data = bytearray()
@@ -31,7 +31,7 @@ def recv_until_newline(sock: socket.socket, timeout: float = 5.0) -> bytes:
             continue
     return bytes(data)
 
-def recv_smtp(sock: socket.socket, timeout: float = 5.0) -> bytes:
+def recv_smtp(sock: socket.socket, timeout: float = 5.0) -> bytes: # pragma: no cover
     """
     Read full SMTP reply (single or multi-line) until final line received or timeout.
     RFC 5321: lines start with 3 digits + ('-' for continuation or ' ' for end).
