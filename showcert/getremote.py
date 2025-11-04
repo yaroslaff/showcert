@@ -10,14 +10,74 @@ phrase = namedtuple('Phrase', 'say wait expect')
 
 # not covering conversation because it's hard to find server which would produce protocol errors
 
-def conversation(s, script):
+
+
+def recv_until_newline(sock: socket.socket, timeout: float = 5.0) -> bytes:
+    """Read from socket until '\n' seen or timeout expires."""
+    sock.setblocking(False)
+    data = bytearray()
+    deadline = time.monotonic() + timeout
+
+    while time.monotonic() < deadline:
+        try:
+            chunk = sock.recv(4096)
+            if not chunk:  # connection closed
+                break
+            data.extend(chunk)
+            if b'\n' in chunk:
+                break
+        except BlockingIOError:
+            time.sleep(0.01)
+            continue
+    return bytes(data)
+
+def recv_smtp(sock: socket.socket, timeout: float = 5.0) -> bytes:
+    """
+    Read full SMTP reply (single or multi-line) until final line received or timeout.
+    RFC 5321: lines start with 3 digits + ('-' for continuation or ' ' for end).
+    """
+    sock.setblocking(False)
+    data = bytearray()
+    lines = []
+    deadline = time.monotonic() + timeout
+    code = None
+
+    while time.monotonic() < deadline:
+        try:
+            chunk = sock.recv(4096)
+            if not chunk:  # connection closed
+                break
+            data.extend(chunk)
+            while b'\n' in data:
+                line, _, rest = data.partition(b'\n')
+                data = bytearray(rest)
+                line = line.rstrip(b'\r')
+                lines.append(line)
+
+                # parse reply code
+                if len(line) >= 4 and line[:3].isdigit():
+                    code = line[:3]
+                    if line[3:4] == b' ':  # final line
+                        return b'\n'.join(lines) + b'\n'
+        except BlockingIOError:
+            time.sleep(0.01)
+            continue
+
+    return b'\n'.join(lines) + b'\n'
+
+
+def conversation(s, script, read_fn = None):
     verbose = False
     for ph in script:
         if ph.say is not None:
             if verbose:
                 print(">", repr(ph.say)) # pragma: no cover
             s.sendall(ph.say.encode())
-        reply = s.recv(2048).decode('utf8')
+        if read_fn:
+            reply = read_fn(s, timeout=5).decode('utf8')
+        else:
+            reply = recv_until_newline(s, timeout=5).decode('utf8')
+
         if verbose:
             print("<", repr(reply))  # pragma: no cover
             print("wait:", repr(ph.wait)) # pragma: no cover
@@ -42,7 +102,7 @@ def starttls_smtp(s):
         phrase('EHLO www-security.com\n', '\n', 'STARTTLS'),
         phrase('STARTTLS\n','\n', None)
     )
-    conversation(s, script)
+    conversation(s, script, read_fn=recv_smtp)
 
 def starttls_pop3(s):
     script = (

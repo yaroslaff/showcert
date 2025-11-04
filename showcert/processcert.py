@@ -44,10 +44,9 @@ def get_local_certs(CERT, insecure=False, password=None):
     else:        
         rawcert = open(CERT, "rb").read()
 
-
     mime = magic.from_buffer(rawcert, mime=True)
 
-    if mime.startswith("text/") or b"BEGIN CERTIFICATE" in rawcert:
+    if mime.startswith("text/") or "BEGIN CERTIFICATE" in str(rawcert):
         # default simple PEM part
         return [ load_certificate(FILETYPE_PEM, str(_c)) for _c in pem.parse(rawcert) if _c.__class__.__name__ == 'Certificate' ]
 

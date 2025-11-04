@@ -44,7 +44,7 @@ class TestShowcertLocal():
         rc = process_cert(CERT=self.snakeoil, output='no', insecure=True)
         assert(rc == 0)
 
-    def test_stdin(self):
+    def test_stdin(self):        
         with open(self.ca_certs[0], "r") as f:  # Read the certificate file
             mock_input = f.read()
         with mock.patch("sys.stdin", io.StringIO(mock_input)):
