@@ -101,6 +101,10 @@ def process_cert(CERT, name=None, insecure=False, warn=None, starttls='auto', ou
     except socket.gaierror as e:
         print("Error with {}: {}".format(CERT, e), file=sys.stderr)
         return 1
+    except ConnectionRefusedError as e:
+        print(f"Connection refused to {CERT}", file=sys.stderr)
+        return 1
+
 
 
     if not insecure:

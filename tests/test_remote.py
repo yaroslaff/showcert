@@ -52,8 +52,6 @@ class TestShowcertRemote():
         with pytest.raises(InvalidAddress):
             process_cert("github.com:notaport")
 
-
-
     def test_https_warn(self):
         # warn if expires "too soon" in 2000 days
         code = process_cert(CERT=self.sites[0], warn=2000, force_network=True)
@@ -115,4 +113,8 @@ class TestShowcertRemote():
     def test_nosuchdomain(self):
         name = 'nosuchdomain-' + ''.join(random.choices(string.ascii_lowercase, k=20)) + '.com'
         code = process_cert(CERT=name)
+        assert code == 1
+
+    def test_connrefused(self):
+        code = process_cert(CERT='localhost:1234')
         assert code == 1

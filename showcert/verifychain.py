@@ -6,6 +6,16 @@ import pem
 from .printcert import get_names_openssl
 from .exceptions import InvalidCertificate
 
+
+def wildcard_match(host: str, pattern: str) -> bool:
+    if pattern.startswith('*.') and '.' in host:
+        #wildcard comparison
+        host_right = host.split('.', 1)[1]
+        pattern_right = pattern.split('.',1)[1]
+        return host_right == pattern_right        
+    else:        
+        return host == pattern
+
 def verify_chain(chain, hostname=None, trusted_ca = None):
 
     trusted_ca = trusted_ca or certifi.where()
@@ -34,11 +44,10 @@ def verify_chain(chain, hostname=None, trusted_ca = None):
     store_ctx.verify_certificate()
 
     if hostname:
-        wildcard_hostname = '*.' + hostname.split('.',1)[1]
 
         names = get_names_openssl(chain[0])
         for _n in names:
-            if _n == hostname or _n == wildcard_hostname:
+            if wildcard_match(hostname, _n):
                 return
 
         # not found
