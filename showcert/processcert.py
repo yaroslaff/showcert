@@ -1,5 +1,6 @@
 from datetime import datetime
 import os
+from pathlib import Path
 import sys
 
 from OpenSSL.crypto import FILETYPE_PEM, FILETYPE_TEXT, load_certificate, \
@@ -42,7 +43,7 @@ def get_local_certs(CERT, insecure=False, password=None):
     if CERT == '-':
         rawcert = sys.stdin.read()
     else:        
-        rawcert = open(CERT, "rb").read()
+        rawcert = Path(CERT).read_bytes()
 
     mime = magic.from_buffer(rawcert, mime=True)
 

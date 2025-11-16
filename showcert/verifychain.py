@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from OpenSSL.crypto import load_certificate, FILETYPE_PEM
 from OpenSSL.crypto import X509Store, X509StoreContext
 import certifi
@@ -23,7 +25,7 @@ def verify_chain(chain, hostname=None, trusted_ca = None):
     # verify
     store = X509Store()
 
-    raw_ca = open(trusted_ca).read().rstrip().encode()
+    raw_ca = Path(trusted_ca).read_bytes().rstrip()
 
     for _ca in pem.parse(raw_ca):
         if isinstance(_ca, pem._object_types.Certificate):
