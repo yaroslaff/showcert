@@ -45,7 +45,7 @@ def get_local_certs(CERT, insecure=False, password=None):
     else:        
         rawcert = Path(CERT).read_bytes()
 
-    mime = magic.from_buffer(rawcert, mime=True)
+    mime = _detect_mimetype(rawcert)
 
     if mime.startswith("text/") or "BEGIN CERTIFICATE" in str(rawcert):
         # default simple PEM part
@@ -62,6 +62,16 @@ def get_local_certs(CERT, insecure=False, password=None):
         if addl:
             certs.extend(crypto_cert_to_pyopenssl(c) for c in addl)
         return certs
+
+
+def _detect_mimetype(file_contents: bytes | str) -> str:
+    if hasattr(magic, "from_buffer"):
+        # https://pypi.org/project/python-magic/
+        return magic.from_buffer(file_contents, mime=True)
+    # https://pypi.org/project/file-magic/
+    _file_magic = magic.detect_from_content(file_contents)
+    return _file_magic.mime_type
+
 
 def get_days_left(crt):
     nafter = datetime.strptime(crt.get_notAfter().decode(), '%Y%m%d%H%M%SZ')
