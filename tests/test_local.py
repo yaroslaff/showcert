@@ -44,9 +44,13 @@ class TestShowcertLocal():
         rc = process_cert(CERT=self.snakeoil, output='no', insecure=True)
         assert(rc == 0)
 
-    def test_stdin(self):        
-        with open(self.ca_certs[0], "r") as f:  # Read the certificate file
+    def test_stdin(self, monkeypatch):
+        with open(self.ca_certs[0], "rb") as f:  # Read the certificate file
             mock_input = f.read()
-        with mock.patch("sys.stdin", io.StringIO(mock_input)):
-            rc = process_cert(CERT='-')
-            assert rc == 0
+
+        mock_stdin = mock.Mock()
+        mock_stdin.buffer = io.BytesIO(mock_input)
+        monkeypatch.setattr("sys.stdin", mock_stdin)
+
+        rc = process_cert(CERT='-')
+        assert rc == 0

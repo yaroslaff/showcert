@@ -41,7 +41,7 @@ def crypto_cert_to_pyopenssl(cert: cryptography_x509.Certificate) -> X509:
 
 def get_local_certs(CERT, insecure=False, password=None):
     if CERT == '-':
-        rawcert = sys.stdin.read()
+        rawcert = sys.stdin.buffer.read()
     else:        
         rawcert = Path(CERT).read_bytes()
 
@@ -64,7 +64,7 @@ def get_local_certs(CERT, insecure=False, password=None):
         return certs
 
 
-def _detect_mimetype(file_contents: bytes | str) -> str:
+def _detect_mimetype(file_contents: bytes) -> str:
     if hasattr(magic, "from_buffer"):
         # https://pypi.org/project/python-magic/
         return magic.from_buffer(file_contents, mime=True)
