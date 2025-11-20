@@ -69,8 +69,8 @@ def _detect_mimetype(file_contents: bytes) -> str:
         # https://pypi.org/project/python-magic/
         return magic.from_buffer(file_contents, mime=True)
     # https://pypi.org/project/file-magic/
-    _file_magic = magic.detect_from_content(file_contents)
-    return _file_magic.mime_type
+    _file_magic = magic.detect_from_content(file_contents) # pragma: no cover
+    return _file_magic.mime_type # pragma: no cover
 
 
 def get_days_left(crt):
