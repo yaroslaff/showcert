@@ -142,9 +142,11 @@ def start_tls(s, method, port):
     return method_map[method](s)
 
 
-def connect46(host, port, limit=5):
+def connect46(host, port, limit=5, ipv4=False):
     s = None
-    for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM):
+    family = socket.AF_INET if ipv4 else socket.AF_UNSPEC
+
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
         af, socktype, proto, canonname, sa = res
         try:
             s = socket.socket(af, socktype, proto)
@@ -158,7 +160,7 @@ def connect46(host, port, limit=5):
     
 
 def get_certificate_chain(host, name=None, port=443, insecure=False, starttls='auto', 
-                          trusted_ca=None, limit=3):
+                          trusted_ca=None, limit=3, ipv4=False):
     
 
     name = name or host
@@ -177,7 +179,7 @@ def get_certificate_chain(host, name=None, port=443, insecure=False, starttls='a
     # s.settimeout(limit)
     try:
         # s.connect((host, port))
-        s = connect46(host, port, limit=limit)
+        s = connect46(host, port, limit=limit, ipv4=ipv4)
     except Exception as e:
         print(type(e))
         print(e)
@@ -218,7 +220,7 @@ def get_certificate_chain(host, name=None, port=443, insecure=False, starttls='a
     return sock_host, chain
 
 
-def get_remote_certs(remote, name=None, insecure=False, starttls='auto', trusted_ca = None, limit = None):
+def get_remote_certs(remote, name=None, insecure=False, starttls='auto', trusted_ca = None, limit = None, ipv4=False):
     # parse CERT address
 
     services = {
@@ -253,7 +255,7 @@ def get_remote_certs(remote, name=None, insecure=False, starttls='auto', trusted
             raise InvalidAddress('Invalid remote address. Valid examples: github.com or smtp.google.com:25')
 
     certlist = get_certificate_chain(host, name=name, port=port, insecure=insecure, 
-                                     starttls=starttls, trusted_ca=trusted_ca, limit=limit)
+                                     starttls=starttls, trusted_ca=trusted_ca, limit=limit, ipv4=ipv4)
     
     # cert = load_certificate(FILETYPE_PEM, certificate)
     return certlist

@@ -18,6 +18,7 @@ class TestShowcertRemote():
     imaps_sites = ['imap.yandex.ru:993', 'imap.gmail.com:993']
     smtp_sites = ['smtp.yandex.ru:25']
     ev_sites = ['www.bankofamerica.com', 'www.hsbc.com.hk']
+    ip46_sites = ['google.com', 'microsoft.com']
 
     def test_https(self):
         for site in self.sites:
@@ -102,6 +103,10 @@ class TestShowcertRemote():
             code = process_cert(CERT=site)
             assert code == 0
 
+    def test_ip46(self):
+        for site in self.ip46_sites:
+            code = process_cert(CERT=site, ipv4=False)
+            assert code == 0
 
     def test_timeout(self):
         test_start = time.time()

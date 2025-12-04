@@ -81,7 +81,7 @@ def get_days_left(crt):
 
 
 def process_cert(CERT, name=None, insecure=False, warn=None, starttls='auto', output='brief',
-                 force_network=False, trusted_ca=None, limit=None, chain=False, password=None):
+                 force_network=False, trusted_ca=None, limit=None, chain=False, password=None, ipv4=False):
 
     retcode = 0
     hostname = None
@@ -101,7 +101,7 @@ def process_cert(CERT, name=None, insecure=False, warn=None, starttls='auto', ou
         else:
             hostname = name or CERT.split(':')[0]
             sock_host, cert_chain = get_remote_certs(remote=CERT, name=name, insecure=insecure, 
-                                                starttls=starttls, trusted_ca=trusted_ca, limit=limit)
+                                                starttls=starttls, trusted_ca=trusted_ca, limit=limit, ipv4=ipv4)
     except SSL.Error as e:
         print("{CERT} Certificate verification error (use -i): {exception}".format(CERT=CERT, exception=e),
             file=sys.stderr)

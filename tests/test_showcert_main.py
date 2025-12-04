@@ -20,6 +20,7 @@ def test_main_snakeoil():
                     assert code == 1
 
 def test_main_notacert():
-    with mock.patch('sys.argv', ['showcert_main.py', "/etc/fstab"]):
+    
+    with mock.patch('sys.argv', ['showcert_main.py', "/etc/issue"]):
                     code = main()
                     assert code == 1

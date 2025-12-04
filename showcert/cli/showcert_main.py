@@ -72,6 +72,8 @@ def get_args():
     g.add_argument('--ca', default=def_ca, help="path to trusted CA certificates, def: {}".format(def_ca))
     g.add_argument('--net', default=False, action='store_true',
                    help="Force network check (if you want to check host and have file/dir with same name in current directory)")
+    g.add_argument('-4', default=False, dest='ipv4', action='store_true', help="use IPv4 only")
+
 
     return parser.parse_args()
 
@@ -100,9 +102,10 @@ def main():
                 trusted_ca=args.ca,
                 chain=args.chain,
                 limit=args.limit,
-                password=args.password)
+                password=args.password,
+                ipv4=args.ipv4)
             maxrc = max(maxrc, rc)
-        except (CertException, ValueError) as e:
+        except (CertException, ValueError, OSError) as e:
             print("{}: {}".format(cert, e))
             maxrc=1
     return(maxrc)
