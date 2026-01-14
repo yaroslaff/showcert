@@ -116,6 +116,7 @@ def start_tls(s, method, port):
 
     port2method_map = {
         25: 'smtp',
+        587: 'smtp',
         110: 'pop3',
         143: 'imap'
     }
