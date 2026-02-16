@@ -142,5 +142,14 @@ def print_cert(crt: X509, fmt='brief', addr=None, path=None, verified=False):
         if authority_key_id:
             print("Authority KI:", hexify(authority_key_id.key_identifier))
 
+        ku = crypto_crt.extensions.get_extension_for_class(x509.KeyUsage).value
+        
+        if ku.key_cert_sign:
+            tags.append('[keyCertSign]')
+        if ku.crl_sign:
+            tags.append('[crlSign]')
+        if ku.digital_signature:
+            tags.append('[digitalSignature]')
+
     if tags:
         print("Tags:", ' '.join(tags))

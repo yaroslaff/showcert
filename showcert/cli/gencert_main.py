@@ -86,6 +86,19 @@ def generate_cert(hostnames: list, ip_addresses: list = None,
         basic_constraints = x509.BasicConstraints(ca=True, path_length=None)
         builder = builder.add_extension(basic_constraints, True)
 
+        key_usage = x509.KeyUsage(
+            digital_signature=False,
+            content_commitment=False,
+            key_encipherment=False,
+            data_encipherment=False,
+            key_agreement=False,
+            key_cert_sign=True,
+            crl_sign=True,
+            encipher_only=False,
+            decipher_only=False,
+        )
+        builder = builder.add_extension(key_usage, critical=True)
+
 #                    crypto.X509Extension(b"basicConstraints",
 #                                 True,
 #                                b"CA:TRUE, pathlen:0"),
