@@ -1,5 +1,7 @@
 from datetime import datetime
 from cryptography import x509
+from cryptography.x509.extensions import ExtensionNotFound
+
 from OpenSSL.crypto import X509, dump_certificate, FILETYPE_TEXT
 from typing import List, Optional
 
@@ -136,14 +138,18 @@ def print_cert(crt: X509, fmt='brief', addr=None, path=None, verified=False):
     print("Issuer:", issuer)
 
 
-    ku = crypto_crt.extensions.get_extension_for_class(x509.KeyUsage).value
-    
-    if ku.key_cert_sign:
-        tags.append('[keyCertSign]')
-    if ku.crl_sign:
-        tags.append('[crlSign]')
-    if ku.digital_signature:
-        tags.append('[digitalSignature]')
+    try:
+        ku = crypto_crt.extensions.get_extension_for_class(x509.KeyUsage).value
+        
+        if ku.key_cert_sign:
+            tags.append('[keyCertSign]')
+        if ku.crl_sign:
+            tags.append('[crlSign]')
+        if ku.digital_signature:
+            tags.append('[digitalSignature]')
+
+    except ExtensionNotFound:
+        pass
 
     if fmt.startswith('ext'):
         print("Fingerprint (sha256):", fingerprint)
