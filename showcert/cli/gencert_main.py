@@ -108,6 +108,20 @@ def generate_cert(hostnames: list, ip_addresses: list = None,
         builder = builder.add_extension(basic_constraints, False) \
             .add_extension(san, False)
 
+        key_usage = x509.KeyUsage(
+            digital_signature=True,
+            content_commitment=False,
+            key_encipherment=False,
+            data_encipherment=False,
+            key_agreement=False,
+            key_cert_sign=False,
+            crl_sign=False,
+            encipher_only=False,
+            decipher_only=False,
+        )
+        builder = builder.add_extension(key_usage, critical=True)
+
+
     # Issuer
     if cacert and cakey:
         builder = builder.issuer_name(cacert.issuer)
